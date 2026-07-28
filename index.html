@@ -788,17 +788,22 @@ function scheduleSync(){
 async function doSync(){
   if(!syncCfg.enabled) return;
   setSyncStatus("syncing");
-  const localChangedAt=state.updatedAt||0;
   try{
-    // 先推本地，再拉远端，避免本地未同步的改动被远端覆盖
-    await pushRemote(state);
+    // 先拉远端，再做无损双向合并（本地优先、远端独有保留），最后推回。
+    // 这样即使某端当前没有某模块数据，也绝不会把另一端的数据覆盖掉。
     const remote=await pullRemote();
-    if(remote && remote.updatedAt && remote.updatedAt>localChangedAt){
-      // 远端更新：合并而非整体覆盖，防止本地未同步改动丢失
+    if(remote){
+      const before=JSON.stringify(state.data);
       state=mergeState(state,remote);
-      saveState({silent:true});
-      renderNav(); renderCurrent();
+      if(JSON.stringify(state.data)!==before){
+        saveState({silent:true});
+        // 若用户正在输入则不重渲染，避免打断
+        if(!document.activeElement || !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
+          renderNav(); renderCurrent();
+        }
+      }
     }
+    await pushRemote(state);
     const t=new Date();
     setSyncStatus("on", t.getHours()+":"+String(t.getMinutes()).padStart(2,"0"));
   }catch(e){
@@ -809,10 +814,13 @@ async function doSync(){
   }
 }
 
-/* 合并远端与本地状态：数组按 id 合并（两端都有的以远端为准，因为远端更新），保留本地独有项 */
+/* 合并远端与本地状态：双向无损合并（本地优先、远端独有保留），绝不整体覆盖 */
 function mergeState(local,remote){
   if(!remote||!remote.data) return local;
   const merged=JSON.parse(JSON.stringify(remote));
+  merged.data=merged.data||{};
+  merged.data.week=merged.data.week||{tasks:[],weekStart:"",history:[]};
+  merged.data.plan=merged.data.plan||[];
   // pages: 保留本地可见性设置，但补全新增默认模块
   const localIds=new Set((local.pages||[]).map(p=>p.id));
   (local.pages||[]).forEach(p=>{
@@ -826,23 +834,28 @@ function mergeState(local,remote){
       merged.pages.splice(def.orderIndex!=null?def.orderIndex:merged.pages.length,0,{...def,visible:true});
     }
   });
-  // data 中数组字段合并
-  const arrayKeys=["plan"];
+  // weekStart：本地有任务时以本地为准（避免远端旧周起始覆盖）
+  if(local.data&&local.data.week&&local.data.week.weekStart&&(local.data.week.tasks||[]).length){
+    merged.data.week.weekStart=local.data.week.weekStart;
+  }
+  // data 中数组字段合并（双向无损：本地优先、远端独有保留）
   (local.data.plan||[]).forEach(t=>{
-    if(!(merged.data.plan||[]).find(x=>x.id===t.id)) merged.data.plan.push(t);
+    const arr=merged.data.plan=merged.data.plan||[];
+    const i=arr.findIndex(x=>x.id===t.id);
+    if(i>=0) arr[i]=t; else arr.push(t);
   });
   // week tasks
   (local.data.week&&local.data.week.tasks||[]).forEach(t=>{
-    const rt=(merged.data.week&&merged.data.week.tasks||[]).find(x=>x.id===t.id);
-    if(!rt) (merged.data.week.tasks=merged.data.week.tasks||[]).push(t);
+    const arr=merged.data.week.tasks=merged.data.week.tasks||[];
+    const i=arr.findIndex(x=>x.id===t.id);
+    if(i>=0) arr[i]=t; else arr.push(t);
   });
   // list pages
   merged.pages.forEach(p=>{
     if(p.type==="list" && local.data[p.id]){
       const localArr=local.data[p.id]||[];
-      const remoteArr=merged.data[p.id]||[];
-      localArr.forEach(t=>{ if(!remoteArr.find(x=>x.id===t.id)) remoteArr.push(t); });
-      merged.data[p.id]=remoteArr;
+      const remoteArr=merged.data[p.id]=merged.data[p.id]||[];
+      localArr.forEach(t=>{ const i=remoteArr.findIndex(x=>x.id===t.id); if(i>=0) remoteArr[i]=t; else remoteArr.push(t); });
     }
   });
   // daily saved
@@ -850,7 +863,7 @@ function mergeState(local,remote){
     const key="daily_"+k;
     const localArr=(local.data[key]&&local.data[key].saved)||[];
     const remoteArr=(merged.data[key]&&merged.data[key].saved)||[];
-    localArr.forEach(t=>{ if(!remoteArr.find(x=>x.id===t.id)) remoteArr.push(t); });
+    localArr.forEach(t=>{ const i=remoteArr.findIndex(x=>x.id===t.id); if(i>=0) remoteArr[i]=t; else remoteArr.push(t); });
     if(merged.data[key]) merged.data[key].saved=remoteArr;
   });
   merged.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0,Date.now());
