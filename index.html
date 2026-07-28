@@ -207,7 +207,9 @@
   .week-day .list-item{padding:8px 2px;border-bottom:1px solid var(--line)}
   .week-day .list-item:last-child{border-bottom:none}
   .week-day .li-text{font-size:13.5px}
-  .week-day .chk{width:18px;height:18px;border-radius:6px}
+  .week-day .chk{width:20px;height:20px;border-radius:7px;border:2px solid #D5D8DE;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;transition:.15s;flex-shrink:0;margin-top:2px}
+  .week-day .chk.done{background:var(--ok);border-color:var(--ok)}
+  .week-day .li-text.done{color:var(--sub);text-decoration:line-through}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -369,7 +371,15 @@ const DATA_BLOGGERS = [
   {name:"企鹅吃喝指南",pf:"xhs",video:"《桂林米粉图鉴：20家横向测评》",reason:"专业横向测评建立权威，收藏率极高；小红书长图文详实，搜索流量稳定；适合做『干货型』探店建立专家人设。"},
   {name:"小高姐的魔法调料",pf:"dy",video:"《在家复刻桂林名店味道》",reason:"教程+探店反差新颖，实用性强；高黏性粉丝追看；虽偏教程，但其『讲透原理』的内容深度值得探店借鉴以提升专业感。"},
   {name:"桂林周边游",pf:"xhs",video:"《探店+周边游｜周末微度假》",reason:"『探店+游』组合拓宽选题，收藏转发双高；小红书度假类内容女性向强；适合做『生活方式博主』延展。"},
-  {name:"老饭骨",pf:"dy",video:"《桂林师傅的拿手菜，探店学一手》",reason:"名厨IP背书，权威感强；『学一手』实用钩子提升完播；虽偏做菜，其『大师亲授』叙事可迁移到『探店+学做法』。"}
+  {name:"老饭骨",pf:"dy",video:"《桂林师傅的拿手菜，探店学一手》",reason:"名厨IP背书，权威感强；『学一手』实用钩子提升完播；虽偏做菜，其『大师亲授』叙事可迁移到『探店+学做法』。"},
+  {name:"卢小开",pf:"dy",video:"《桂林早市里的隐藏早餐地图》",reason:"2025-2026年崛起的市井烟火型博主，早市/菜市场+本地人视角，真实感强；适合借鉴『早起逛市场』系列选题。"},
+  {name:"江寻千（九月）",pf:"dy",video:"《在桂林学做一碗非遗米粉》",reason:"非遗/传统文化+在地体验，2026年文旅内容持续热门；可做桂林本土手艺/老字号深度内容。"},
+  {name:"李要红",pf:"xhs",video:"《桂林本地人带路，连吃5家不踩雷》",reason:"2025年后小红书高赞结构：本地人带路+真实消费+清单体；收藏率和转化率双高。"},
+  {name:"阿金很忙",pf:"dy",video:"《挑战用100元在桂林早市吃到撑》",reason:"低价挑战+早市烟火气，2026年下沉市场内容仍强势；评论区互动和完播数据好。"},
+  {name:"森山野纪",pf:"xhs",video:"《桂林Citywalk｜从老街到江边的小众路线》",reason:"Citywalk+图文路线，小红书2025-2026年持续高流量模板；适合年轻女性用户收藏。"},
+  {name:"大西北风",pf:"dy",video:"《外地人第一次来桂林，这条美食街必逛》",reason:"游客视角+攻略属性，搜索流量稳定；适合作为桂林旅游引流内容参考。"},
+  {name:"郭柳玲",pf:"xhs",video:"《桂林土著私藏｜人均20吃遍秀峰区》",reason:"本地 identity + 性价比清单，小红书女性用户高互动；可做秀峰区专题系列。"},
+  {name:"池早是我",pf:"dy",video:"《在桂林体验100种职业：今天当米粉店学徒》",reason:"职业体验+在地店铺，2025-2026年爆款形式；能为合作店铺带来强曝光和话题。"}
 ];
 
 /* ---------- 每日灵感库（桂林探店/抖音/小红书方向，按日轮换） ---------- */
@@ -404,7 +414,12 @@ const DAILY_DATA = {
     {title:"桂林素食/轻食探店：减脂期也能吃",tags:["健康","细分"],desc:"针对健身/减脂人群，探桂林轻食、素食店。",why:"细分人群精准，健康趋势长期有需求，适合小红书图文。"},
     {title:"桂林早餐的『隐藏吃法』",tags:["攻略","本地人"],desc:"揭秘桂林米粉、糯米饭等的本地隐藏吃法/加料秘籍。",why:"『隐藏吃法』给用户实用信息，易收藏和模仿，传播性强。"},
     {title:"翻牌粉丝推荐：粉丝说这家好吃我就来了",tags:["互动","UGC"],desc:"随机选取粉丝评论推荐的店去探，@粉丝。",why:"增强粉丝参与感，UGC内容真实可信，评论区互动和粘性双提升。"},
-    {title:"桂林亲子友好餐厅合集",tags:["亲子","合集"],desc:"整理适合带娃家庭的餐厅，突出环境、儿童餐、性价比。",why:"亲子是强消费场景，合集实用，小红书宝妈群体收藏率高。"}
+    {title:"桂林亲子友好餐厅合集",tags:["亲子","合集"],desc:"整理适合带娃家庭的餐厅，突出环境、儿童餐、性价比。",why:"亲子是强消费场景，合集实用，小红书宝妈群体收藏率高。"},
+    {title:"桂林『Cityride』路线：骑车吃遍老城区",tags:["Cityride","运动","探店"],desc:"设计一条适合骑行的老城区探店路线，边骑边吃。",why:"2025-2026年Cityride热度上升，运动+探店组合吸引年轻用户。"},
+    {title:"桂林暴雨/高温天的救命小店",tags:["天气","情绪","实用"],desc:"针对极端天气推荐遮雨/避暑/暖身的小店。",why:"结合实时天气做内容，搜索流量和即时推荐双高。"},
+    {title:"桂林『一人食』友好餐厅",tags:["一人食","社恐","细分"],desc:"搜罗适合一个人吃饭也不尴尬的店，突出座位、分量、氛围。",why:"单身经济和社恐文化持续，细分场景需求稳定。"},
+    {title:"桂林老店的新流量密码",tags:["老字号","改造","流量"],desc:"探访用短视频/外卖/新装修重新火起来的老店，分析原因。",why:"老店焕新是平台鼓励的正能量内容，也容易获本地媒体关注。"},
+    {title:"桂林『街头采访』式探店",tags:["采访","UGC","互动"],desc:"在街上问路人推荐一家店，然后立刻去吃。",why:"真实路人推荐降低广告感，互动和意外感强，适合抖音。"}
   ],
   hot:[
     {title:"『本地人带路』系列",desc:"用本地人身份带观众找店，强调『不是游客店』。",why:"信任感强，差异化明显；『本地人』三个字是小红书和抖音探店流量密码。"},
@@ -436,7 +451,12 @@ const DAILY_DATA = {
     {title:"『探店+知识科普』",desc:"讲桂林米粉历史、油茶做法、菜系渊源。",why:"增加内容厚度，建立专家人设，适合中长视频。"},
     {title:"『夫妻/闺蜜/情侣搭档』",desc:"双人出镜，增加互动和化学反应。",why:"搭档关系增加看点，比单人探店更生动。"},
     {title:"『极限打卡』",desc:"一天跑10家店、一小时吃5碗粉。",why:"极限挑战有视觉冲击，完播率和讨论度高。"},
-    {title:"『改造/逆袭』",desc:"帮一家老店拍视频，记录客流变化。",why:"故事性强，有社会价值，易获情感共鸣和平台推荐。"}
+    {title:"『改造/逆袭』",desc:"帮一家老店拍视频，记录客流变化。",why:"故事性强，有社会价值，易获情感共鸣和平台推荐。"},
+    {title:"『AI生成探店脚本/封面』",desc:"用AI工具辅助生成标题、脚本、封面文案，再人工本地化修改。",why:"2026年AI工具普及，『AI+真人』 workflow 能提高更新频率，也是内容话题点。"},
+    {title:"『短剧+探店』融合",desc:"用15-30秒轻剧情引入探店，比如『老板，来碗粉，不要粉』。",why:"2025-2026年短剧流量持续高，轻剧情能降低广告感、提升完播。"},
+    {title:"『季节性情绪营销』",desc:"高温天推清凉糖水、雨季推暖胃油茶、期末推学生党套餐。",why:"结合当下天气/节点做情绪钩子，比单纯探店更容易获得推荐和共鸣。"},
+    {title:"『素人改造计划』",desc:"随机找路人/粉丝，带ta吃一家店并记录真实反应。",why:"真实互动+不确定性，2026年仍是对抗『软广疲劳』的有效形式。"},
+    {title:"『探店+本地新闻联动』",desc:"结合桂林本地热搜、修路/新开商圈/文旅活动做即时探店。",why:"时效性强，能吃到搜索流量和同城推荐，信息越新竞争越小。"}
   ],
   review:[
     {title:"前3秒有没有钩子？",checklist:["是否在前3秒抛出悬念/冲突/问题","是否有视觉或语言钩子","用户会不会因为前3秒继续看"],why:"前3秒决定完播率，没有钩子基本等于白拍。"},
@@ -501,6 +521,38 @@ const DAILY_DATA = {
     {title:"揭秘型",example:"桂林这家网红店，后厨居然是这样的",why:"揭秘满足窥探欲，点击率好。"},
     {title:"情怀故事型",example:"桂林这家30年老店，养大了三代人",why:"情怀故事易引发转发和评论。"},
     {title:"行动号召型",example:"下周去哪家？评论区你们说了算！",why:"强互动引导，评论区热度高。"}
+  ],
+  fun:[
+    {title:"城市盲盒散步",desc:"不设目的地，随机坐一趟公交到陌生站点，用30分钟探索半径500米内的小店、涂鸦和路人故事。",why:"ENFP最爱未知与新鲜感，低成本就能获得『发现新大陆』的兴奋感。",tags:["零成本","探索","随机"],local:{guilin:"在桂林可试试乘坐100路或11路到『阳桥』或『解放桥』附近下车，沿着榕湖/杉湖走一段没走过的巷子。"}},
+    {title:"反向探店挑战",desc:"专门找评分3.5-4分、评论少于50条的『冷门小店』，给老板拍一条真诚测评视频。",why:"反套路内容+真实社交，既能产出独家素材，又能满足ENFP的好奇心和表达欲。",tags:["探店","内容","社交"],local:{guilin:"试试在秀峰区搜『米粉』但按『最近』排序，去找一家评论区只有本地人说话的店。"}},
+    {title:"学一项街头技能",desc:"今天花1小时在广场/公园跟大爷大妈学一样技能：广场舞、太极拳、抖空竹、下象棋。",why:"即兴学习+陌生人互动，完美击中ENFP的社交能量和对新鲜体验的渴望。",tags:["学习","街头","互动"],local:{guilin:"榕湖/杉湖边的晨练群体很多，早上7-8点去『丽君路』或『阳桥』附近最容易混入。"}},
+    {title:"一个人的主题日",desc:"给自己设定一个主题，比如『黄色日』：今天只吃/买/拍黄色的东西，并记录成vlog。",why:"限定的创意规则会让普通的一天变成游戏，特别适合容易无聊的ENFP。",tags:["创意","记录","独处"],local:{guilin:"主题可改成『桂林米粉日』：早中晚三家不同风格的米粉，拍对比。"}},
+    {title:"陌生人故事交换",desc:"带一个小本子，去咖啡馆/书店请一位陌生人写下ta今天最开心的一件事，你也写一条交换。",why:"ENFP享受人与人的连接，这种轻量社交不会社死，还能收获真实故事素材。",tags:["社交","故事","治愈"],local:{guilin:"『刀锋书店』或滨江路沿线的独立咖啡馆，年轻人和旅行者比例高。"}},
+    {title:"夜爬/夜骑一个城市角落",desc:"晚上9点后去一个白天很熟悉但晚上很少去的地方，用夜拍模式记录光影。",why:"打破日常节律，熟悉的场景会变得陌生又浪漫，适合喜欢新鲜感的ENFP。",tags:["夜景","探险","摄影"],local:{guilin:"晚上走一遍『东西巷』到『逍遥楼』，或者骑共享电动车沿滨江路吹风。"}},
+    {title:"菜市场美学狩猎",desc:"去本地菜市场，只拍色彩/形状/光影有趣的画面，拼成一张九宫格发小红书。",why:"市井烟火+视觉训练，既练审美又容易出爆款内容，ENFP会觉得像寻宝。",tags:["摄影","市井","美学"],local:{guilin:"『乐群菜市场』或『西门菜市』色彩丰富，早8-9点光线最好。"}},
+    {title:"给未来的自己写一封信",desc:"找一家能久坐的店，用笔写一封给3个月后自己的信，封存在手机里设提醒。",why:"ENFP容易三分钟热度，这个仪式能帮ta把当下的兴奋感延续成一段小承诺。",tags:["反思","仪式","慢下来"],local:{guilin:"在滨江路找一家有窗景的咖啡馆，边写边看漓江。"}},
+    {title:"随机约球/约跑",desc:"在羽毛球群或跑步群发一条『今晚有人一起吗？』，迈出主动社交的一步。",why:"ENFP需要外部刺激来启动，主动发起一次约局会带来一整天的能量。",tags:["运动","社交","主动"],local:{guilin:"你已经在羽毛球群里，今晚就发一句：『秀峰区有人打球吗？新手求带』。"}},
+    {title:"做一日本地向导",desc:"假设有朋友第一次来桂林，用一天时间带ta走一条只有你知道的路线，并拍成攻略。",why:"ENFP喜欢分享和连接，把熟悉的地方重新介绍给别人，会让自己也重新发现城市。",tags:["分享","城市","攻略"],local:{guilin:"路线建议：老东江米粉→象鼻山外围→东西巷→正阳步行街小吃→两江四湖夜景。"}},
+    {title:"尝试一种没吃过的菜系",desc:"选一家你从没吃过的菜系餐厅（比如傣味、西北面食、墨西哥菜），点招牌菜做测评。",why:"味蕾新鲜感直接刺激多巴胺，还能产出探店内容，一举两得。",tags:["美食","尝鲜","探店"],local:{guilin:"可搜索『桂林 异国料理』或『桂林 小众菜系』，选评分4.2以上的新店。"}},
+    {title:"参加一场线下活动",desc:"在豆瓣同城/小红书/本地公众号找一场今天或明天的线下活动：市集、放映、读书会、徒步。",why:"ENFP在人群中充电，临时决定出门往往能遇见意料之外的人和灵感。",tags:["活动","社交","出门"],local:{guilin:"关注『桂林生活』『桂林周末去哪玩』等本地号，或小红书搜『桂林 活动』。"}},
+    {title:"拍一条『今天学到了什么』短视频",desc:"把今天新学会的一个知识点、小技巧或新发现，用30秒讲清楚发抖音/小红书。",why:"输出倒逼输入，ENFP需要即时反馈，发布后的互动会强化学习动力。",tags:["输出","学习","短视频"],local:{guilin:"主题可以是『桂林人教你怎么吃米粉不烫嘴』之类的本地小技巧。"}},
+    {title:"DIY一个移动办公日",desc:"带电脑/本子去3个不同的场所各坐1小时：咖啡馆、公园长椅、书店，记录哪个环境效率最高。",why:"换环境=换脑子，ENFP容易被新鲜感驱动，把工作日变成探索实验。",tags:["工作","探索","效率"],local:{guilin:"推荐组合：滨江路咖啡馆→榕湖长椅→刀锋书店。"}},
+    {title:"给常去的店写一条走心评论",desc:"选一家你真实喜欢的店，写一条100字以上的评论，不敷衍、不复制。",why:"真诚的表达会收到老板的感谢，也可能被置顶，给ENFP带来小确幸。",tags:["表达","善意","本地"],local:{guilin:"就写你最爱的那家米粉店或咖啡馆，具体描述一个细节。"}},
+    {title:"日落收集计划",desc:"今天去追一场日落，哪怕只是楼顶、江边或天桥，拍9张不同色调的天空。",why:"自然美景+摄影目标，简单但能带来满足感和素材。",tags:["自然","摄影","治愈"],local:{guilin:"最佳位置：解放桥、逍遥楼、訾洲公园或任何能看到漓江的开阔地。"}},
+    {title:"采访一位手艺人/店主",desc:"找一家老店，征得同意后问老板3个问题：为什么开这家店、最难忘的故事、推荐客人吃什么。",why:"真实人物故事是ENFP最感兴趣的内容，也能产出有温度的探店视频。",tags:["采访","故事","人文"],local:{guilin:"桂林米粉店、油茶店、糕点铺的老板通常很乐意聊天。"}},
+    {title:"用新视角重拍家门口",desc:"只拍你家附近100米，但要求自己发现3个以前没注意过的细节。",why:"新鲜感不只在远方，ENFP的好奇心也能在熟悉环境里重新启动。",tags:["观察","摄影","日常"],local:{guilin:"可以是楼下的米粉店招牌、巷口的树影、邻居晒的辣椒酱。"}},
+    {title:"组织一次小型聚餐",desc:"约2-3个朋友去一家新店，每人点一道菜，饭后交换评分。",why:"ENFP在小型社交中能量最高，把吃饭变成游戏会更有趣。",tags:["社交","美食","游戏"],local:{guilin:"选一家你想去但一直没去的店，群里发『今晚探店，人均XX，有人吗？』"}},
+    {title:"尝试一次公开表达",desc:"在抖音/小红书开一场直播，或发一条露脸视频，主题不限。",why:"ENFP天生适合表达，突破一次公开分享的心理门槛会带来巨大成就感。",tags:["表达","突破","创作"],local:{guilin:"主题可以是『桂林本地人带你云逛东西巷』。"}},
+    {title:"去图书馆借一本随机书",desc:"到图书馆随便找一个书架，闭眼抽一本书，借回家读30页。",why:"随机性+阅读，给ENFP一种『命运安排』的新鲜感。",tags:["阅读","随机","安静"],local:{guilin:"桂林图书馆或秀峰区附近的社区书屋都可以。"}},
+    {title:"做一次街头采访",desc:"准备1个简单问题，在街上问5个陌生人，剪辑成15秒短视频。",why:"轻量社交+内容创作，ENFP的社牛属性可以得到正向释放。",tags:["采访","社交","视频"],local:{guilin:"问题示例：『你来桂林最想吃的是什么？』或『你心中的桂林米粉No.1』。"}},
+    {title:"给自己设计一条Citywalk路线",desc:"用地图App手动标记5个点，连成一条1小时步行路线，边走边拍。",why:"主动设计探索路线，ENFP会享受规划和发现的双重快乐。",tags:["Citywalk","规划","探索"],local:{guilin:"路线：正阳步行街→东西巷→靖江王府外围→解放桥→滨江路。"}},
+    {title:"学做一道桂林菜",desc:"选一道桂林家常菜（如啤酒鱼、油茶、糯米鸡），跟着视频做一次。",why:"动手+本地文化，完成后还能拍成内容，是ENFP会喜欢的多感官体验。",tags:["烹饪","本地","动手"],local:{guilin:"可从简单的『桂林米粉家庭版』或『油茶配粑粑』开始。"}},
+    {title:"去一个从未去过的公园",desc:"搜索地图上你从未注意过的公园/绿地，去坐20分钟，不带手机。",why:"新鲜感+数字断联，帮ENFP从信息过载中恢复，同时发现新地方。",tags:["自然","断联","探索"],local:{guilin:"可尝试『南溪山公园』『西山公园』或家附近的小社区公园。"}},
+    {title:"做一次24小时消费记录",desc:"记录今天每一笔开销，晚上分析哪些钱花得让你快乐，哪些只是习惯。",why:"ENFP容易冲动消费，这个练习把日常变成观察游戏，还能更了解自己。",tags:["记录","理财","自我观察"],local:{guilin:"重点记录探店/吃饭/交通开销，说不定能发现下期选题。"}},
+    {title:"用短视频记录『今天的小确幸』",desc:"今天用手机拍3个让你微笑的瞬间，剪成一条15秒vlog。",why:"ENFP需要正向反馈，主动记录快乐会让幸福感的颗粒度变细。",tags:["记录","vlog","幸福"],local:{guilin:"素材可以是米粉出锅的蒸汽、江边落日、老板的笑脸。"}},
+    {title:"参加一次志愿活动",desc:"在本地公益组织或社区找一个今天的志愿活动，去做2小时。",why:"利他行为能给ENFP带来深层满足感，还能认识志同道合的人。",tags:["公益","利他","社交"],local:{guilin:"关注『桂林志愿者』公众号或小红书本地公益账号。"}},
+    {title:"尝试一次即兴旅行",desc:"买一张最近班次的汽车/动车票，去周边县城玩半天，当天往返。",why:"即兴+短途，满足ENFP对冒险的渴望但风险可控。",tags:["旅行","即兴","冒险"],local:{guilin:"可选阳朔、灵川、兴安，吃一碗当地米粉就回来。"}},
+    {title:"建立一个小型创作挑战",desc:"给自己设定『连续7天每天发一条短视频/图文』的小挑战，今天开始。",why:"ENFP需要外部目标来保持兴奋，小挑战能把新鲜感转化为持续创作力。",tags:["挑战","创作","坚持"],local:{guilin:"主题可以是『7天吃遍桂林米粉』或『7天不重样桂林早餐』。"}}
   ]
 };
 
@@ -513,6 +565,7 @@ const DEFAULT_PAGES = [
   {id:"hot",     label:"爆款热点",     icon:"🔥", type:"daily",   builtin:true, dailyType:"hot"},
   {id:"review",  label:"内容复盘",     icon:"📝", type:"daily",   builtin:true, dailyType:"review"},
   {id:"title",   label:"爆款标题",     icon:"🏷️", type:"daily",   builtin:true, dailyType:"title"},
+  {id:"fun",     label:"每日新鲜事",   icon:"✨", type:"daily",   builtin:true, dailyType:"fun"},
   {id:"memo",    label:"备忘录",       icon:"📒", type:"list",    builtin:true},
   {id:"sport",   label:"运动健身",     icon:"🏸", type:"list",    builtin:true},
   {id:"social",  label:"社交",         icon:"💬", type:"list",    builtin:true},
@@ -546,14 +599,16 @@ function defaultState(){
   DEFAULT_PAGES.forEach(p=>{ if(p.type==="list") s.data[p.id]=[]; });
   s.data.plan=[];          // {id,text,platform,done,doneDate,createdDate}
   s.data.blogger={notes:{}};// {notes:{dateStr:string}}
-  s.data.week={tasks:[]};  // {id,dayIndex(0-6),text,done}
+  s.data.week={tasks:[],weekStart:"",history:[]};  // {id,dayIndex(0-6),text,done}, weekStart:本周一日期, history:已完成归档
   // 每日灵感模块：保存用户收藏和笔记
-  ["idea","hot","review","title"].forEach(k=>{ s.data["daily_"+k]={saved:[], notes:{}}; });
+  ["idea","hot","review","title","fun"].forEach(k=>{ s.data["daily_"+k]={saved:[], notes:{}}; });
+  // IP位置缓存（用于本地化推荐）
+  s.data.location={city:"",region:"",country:"",ip:"",fetchedAt:0};
   s.updatedAt=Date.now();
   return s;
 }
 
-const DAILY_IDS=["idea","hot","review","title"];
+const DAILY_IDS=["idea","hot","review","title","fun"];
 const BUILTIN_IDS=DEFAULT_PAGES.map(p=>p.id);
 function loadState(){
   try{
@@ -564,7 +619,10 @@ function loadState(){
   if(!state.data) state.data={};
   if(!state.data.plan) state.data.plan=[];
   if(!state.data.blogger) state.data.blogger={notes:{}};
-  if(!state.data.week) state.data.week={tasks:[]};
+  if(!state.data.week) state.data.week={tasks:[],weekStart:"",history:[]};
+  if(!state.data.week.history) state.data.week.history=[];
+  if(!state.data.week.weekStart) state.data.week.weekStart="";
+  if(!state.data.location) state.data.location={city:"",region:"",country:"",ip:"",fetchedAt:0};
   DAILY_IDS.forEach(k=>{ if(!state.data["daily_"+k]) state.data["daily_"+k]={saved:[], notes:{}}; });
   DEFAULT_PAGES.forEach(p=>{ if(p.type==="list" && !state.data[p.id]) state.data[p.id]=[]; });
 
@@ -601,6 +659,30 @@ function showSaveToast(){
   clearTimeout(t._tm);
   t._tm=setTimeout(()=>t.classList.remove("show"),1100);
 }
+
+/* ---------- IP 位置（用于本地化推荐） ---------- */
+let locationFetching=false;
+function fetchLocation(){
+  if(locationFetching) return;
+  locationFetching=true;
+  // 优先用缓存（7天内有效）
+  const loc=state.data.location||{};
+  if(loc.city && loc.fetchedAt && Date.now()-loc.fetchedAt<7*86400000){ locationFetching=false; return; }
+  // 免费 IP 定位 API，失败则静默回退
+  fetch("https://ipapi.co/json/").then(r=>r.json()).then(j=>{
+    state.data.location={city:j.city||"",region:j.region||"",country:j.country_name||"",ip:j.ip||"",fetchedAt:Date.now()};
+    saveState({silent:true}); if(currentPage==="fun") renderCurrent();
+  }).catch(()=>{
+    fetch("https://ip-api.com/json/?fields=status,city,regionName,country,ip").then(r=>r.json()).then(j=>{
+      if(j.status==="success"){
+        state.data.location={city:j.city||"",region:j.regionName||"",country:j.country||"",ip:j.ip||"",fetchedAt:Date.now()};
+        saveState({silent:true}); if(currentPage==="fun") renderCurrent();
+      }
+    }).catch(()=>{});
+  }).finally(()=>{ locationFetching=false; });
+}
+function isGuilin(){ const loc=state.data.location||{}; return /桂林|Guilin/i.test((loc.city||"")+(loc.region||"")); }
+function locationText(){ const loc=state.data.location||{}; return loc.city?`📍 ${loc.city}${loc.region?"·"+loc.region:""}`:"📍 定位中"; }
 
 /* ---------- 云端配置 ---------- */
 /* ⚠️ 内置自动同步凭据（饼饼专属）。token 已写入本文件，请勿将本文件分享到公开/不可信环境。
@@ -706,14 +788,17 @@ function scheduleSync(){
 async function doSync(){
   if(!syncCfg.enabled) return;
   setSyncStatus("syncing");
+  const localChangedAt=state.updatedAt||0;
   try{
+    // 先推本地，再拉远端，避免本地未同步的改动被远端覆盖
+    await pushRemote(state);
     const remote=await pullRemote();
-    if(remote && remote.updatedAt && remote.updatedAt>state.updatedAt){
-      // 远端更新 -> 合并（简单 LWW：取较新整体）
-      state=remote; saveState({silent:true});
+    if(remote && remote.updatedAt && remote.updatedAt>localChangedAt){
+      // 远端更新：合并而非整体覆盖，防止本地未同步改动丢失
+      state=mergeState(state,remote);
+      saveState({silent:true});
       renderNav(); renderCurrent();
     }
-    await pushRemote(state);
     const t=new Date();
     setSyncStatus("on", t.getHours()+":"+String(t.getMinutes()).padStart(2,"0"));
   }catch(e){
@@ -722,6 +807,54 @@ async function doSync(){
     if(isNet){ setSyncStatus("restricted"); }
     else { setSyncStatus("error"); setTimeout(()=>setSyncStatus("off"),2500); }
   }
+}
+
+/* 合并远端与本地状态：数组按 id 合并（两端都有的以远端为准，因为远端更新），保留本地独有项 */
+function mergeState(local,remote){
+  if(!remote||!remote.data) return local;
+  const merged=JSON.parse(JSON.stringify(remote));
+  // pages: 保留本地可见性设置，但补全新增默认模块
+  const localIds=new Set((local.pages||[]).map(p=>p.id));
+  (local.pages||[]).forEach(p=>{
+    const rp=(merged.pages||[]).find(x=>x.id===p.id);
+    if(rp){ rp.visible=p.visible!==undefined?p.visible:rp.visible; }
+    else if(!p.builtin){ (merged.pages=merged.pages||[]).push(p); }
+  });
+  // 补齐新增默认模块
+  DEFAULT_PAGES.forEach(def=>{
+    if(!(merged.pages||[]).find(p=>p.id===def.id)){
+      merged.pages.splice(def.orderIndex!=null?def.orderIndex:merged.pages.length,0,{...def,visible:true});
+    }
+  });
+  // data 中数组字段合并
+  const arrayKeys=["plan"];
+  (local.data.plan||[]).forEach(t=>{
+    if(!(merged.data.plan||[]).find(x=>x.id===t.id)) merged.data.plan.push(t);
+  });
+  // week tasks
+  (local.data.week&&local.data.week.tasks||[]).forEach(t=>{
+    const rt=(merged.data.week&&merged.data.week.tasks||[]).find(x=>x.id===t.id);
+    if(!rt) (merged.data.week.tasks=merged.data.week.tasks||[]).push(t);
+  });
+  // list pages
+  merged.pages.forEach(p=>{
+    if(p.type==="list" && local.data[p.id]){
+      const localArr=local.data[p.id]||[];
+      const remoteArr=merged.data[p.id]||[];
+      localArr.forEach(t=>{ if(!remoteArr.find(x=>x.id===t.id)) remoteArr.push(t); });
+      merged.data[p.id]=remoteArr;
+    }
+  });
+  // daily saved
+  ["idea","hot","review","title","fun"].forEach(k=>{
+    const key="daily_"+k;
+    const localArr=(local.data[key]&&local.data[key].saved)||[];
+    const remoteArr=(merged.data[key]&&merged.data[key].saved)||[];
+    localArr.forEach(t=>{ if(!remoteArr.find(x=>x.id===t.id)) remoteArr.push(t); });
+    if(merged.data[key]) merged.data[key].saved=remoteArr;
+  });
+  merged.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0,Date.now());
+  return merged;
 }
 
 /* =========================================================
@@ -766,7 +899,7 @@ function subText(id){
   const m={
     plan:"今天也要认真探店呀", week:"把一周目标拆到每一天",
     blogger:"每天学一条爆款逻辑",
-    idea:"每日一个桂林探店选题", hot:"每日一个可追热点", review:"每日一条复盘清单", title:"每日一个好标题公式",
+    idea:"每日一个桂林探店选题", hot:"每日一个可追热点", review:"每日一条复盘清单", title:"每日一个好标题公式", fun:"每天一件让ENFP心动的新鲜事",
     memo:"随手记", sport:"动起来就不孤单",
     social:"人脉要经营", eat:"吃货清单", go:"想去的地方", watch:"想看的片单"
   };
@@ -980,33 +1113,48 @@ function renderDaily(c,p){
   }else if(type==="title"){
     body=`<div class="daily-body"><b>公式：</b>${esc(item.title)}</div><div class="bc-video">📝 示例：<b>${esc(item.example)}</b></div>`;
     extra=`<div class="daily-reason"><b>🏷️ 为什么这个标题有效？</b><br>${esc(item.why)}</div>`;
+  }else if(type==="fun"){
+    const tags=(item.tags||[]).map(t=>`<span class="daily-tag">${esc(t)}</span>`).join("");
+    const localTip=isGuilin()&&item.local&&item.local.guilin?`<div class="daily-reason" style="background:#FFF9F5;border-color:#FFE4D1"><b>📍 桂林本地玩法：</b><br>${esc(item.local.guilin)}</div>`:"";
+    body=`<div class="daily-tags">${tags}</div><div class="daily-body">${esc(item.desc)}</div>`;
+    extra=`<div class="daily-reason"><b>✨ 为什么适合 ENFP？</b><br>${esc(item.why)}</div>${localTip}`;
   }
   let h=`<div class="daynav">
     <button onclick="shiftDaily(-1)">‹</button>
     <div class="cur">${isToday?"📌 今日灵感 · "+dailyBrowseDate:"📅 "+dailyBrowseDate}</div>
     <button onclick="shiftDaily(1)">›</button>
   </div>`;
+  const isFun=type==="fun";
+  const locBadge=isFun?`<span style="font-size:12px;color:var(--sub);margin-left:auto">${locationText()}</span>`:"";
+  const saveBtn=isFun?"🌟 想试试，加入心愿单":"⭐ 加入我的灵感库";
+  const copyBtn=isFun?"📋 分享给朋友":"📋 复制内容";
+  const noteHint=isFun?"我的计划：什么时候去、约谁一起、需要准备什么？":"我的笔记：这条怎么用到我的内容里？";
   h+=`<div class="card daily-card">
-    <div class="card-title">${p.icon} ${esc(p.label)} <span class="ct-sub">每日 0 点自动更新</span></div>
+    <div class="card-title">${p.icon} ${esc(p.label)} ${locBadge}<span class="ct-sub">每日 0 点自动更新</span></div>
     <div style="font-size:18px;font-weight:800;margin:6px 0 10px">${title}</div>
     ${body}
     ${extra}
     <div style="display:flex;gap:9px;margin-top:14px">
-      <button class="btn btn-primary" style="flex:1" onclick="addDailySave('${type}')">⭐ 加入我的灵感库</button>
-      <button class="btn btn-ghost" onclick="copyDaily('${type}')">📋 复制内容</button>
+      <button class="btn btn-primary" style="flex:1" onclick="addDailySave('${type}')">${saveBtn}</button>
+      <button class="btn btn-ghost" onclick="copyDaily('${type}')">${copyBtn}</button>
     </div>
-    <textarea class="bc-note" id="dailyNote" placeholder="我的笔记：这条怎么用到我的内容里？（自动保存）">${esc(note)}</textarea>
+    <textarea class="bc-note" id="dailyNote" placeholder="${noteHint}（自动保存）">${esc(note)}</textarea>
   </div>`;
   // 我的收藏
+  const savedTitle=isFun?"🌟 我的心愿单":"⭐ 我的灵感库";
   if(saved.length){
-    h+=`<div class="card"><div class="card-title">⭐ 我的灵感库 <span class="ct-sub">${saved.length} 条</span></div>`;
+    h+=`<div class="card"><div class="card-title">${savedTitle} <span class="ct-sub">${saved.length} 条</span></div>`;
     saved.slice().reverse().forEach((s,i)=>{
       h+=`<div class="list-item"><div class="li-text" style="font-size:13.5px">${esc(s.text)}<span style="color:var(--sub);margin-left:6px">·${s.date}</span></div><div class="li-del" onclick="delDailySave('${type}',${saved.length-1-i})">删除</div></div>`;
     });
     h+=`</div>`;
   }
-  h+=`<div class="card"><div class="hint" style="margin:0">💡 这是为你（桂林探店博主，抖音+小红书方向）定制的<b>每日灵感库</b>，每天自动轮换。可收藏、可记笔记、可复制。0 点自动刷新今日内容。</div></div>`;
+  const bottomHint=isFun
+    ? `💡 每天根据日期+IP位置为你推荐一件年轻人喜欢的新鲜事。ENFP 的你，生活需要不断更新！可收藏、可记计划、可分享。0 点自动刷新。`
+    : `💡 这是为你（桂林探店博主，抖音+小红书方向）定制的<b>每日灵感库</b>，每天自动轮换。可收藏、可记笔记、可复制。0 点自动刷新今日内容。`;
+  h+=`<div class="card"><div class="hint" style="margin:0">${bottomHint}</div></div>`;
   c.innerHTML=h;
+  if(isFun) fetchLocation();
   const ta=$("dailyNote");
   ta.addEventListener("input",()=>{
     if(!state.data[dataKey].notes) state.data[dataKey].notes={};
@@ -1038,6 +1186,7 @@ function copyDaily(type){
   else if(type==="hot") text+=item.desc+"\n"+item.why;
   else if(type==="review") text+=(item.checklist||[]).join("\n")+"\n"+item.why;
   else if(type==="title") text+=item.example+"\n"+item.why;
+  else if(type==="fun") text+=item.desc+"\n"+item.why+(item.local&&item.local.guilin?"\n桂林玩法："+item.local.guilin:"");
   navigator.clipboard.writeText(text).then(()=>{
     const t=$("saveToast"); t.textContent="📋 已复制到剪贴板"; t.classList.add("show");
     clearTimeout(t._tm); t._tm=setTimeout(()=>{t.classList.remove("show"); t.textContent="✅ 已自动保存";},1500);
@@ -1060,13 +1209,17 @@ function renderWeek(c){
   const tasks=state.data.week.tasks||[];
   const total=tasks.length, done=tasks.filter(t=>t.done).length;
   const pct=total?Math.round(done/total*100):0;
+  const weekStart=state.data.week.weekStart||weekDateStr(0);
   let h=`<div class="card">
     <div class="card-title">🗓️ 每周计划 <span class="ct-sub">完成 ${done}/${total} · ${pct}%</span></div>
     <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
-    <div class="hint" style="margin:0">把本周目标拆到每天，完成一项勾一项。每周一自动切换新周。</div>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <div class="hint" style="margin:0;flex:1;min-width:220px">本周：${weekStart} 起。完成一项勾一项，每周一 0 点自动归档上周已完成任务。</div>
+      <button class="btn btn-ghost btn-sm" onclick="archiveWeekDone()">📦 归档本周已完成</button>
+      <button class="btn btn-danger btn-sm" onclick="resetWeek()">🔄 开始新的一周</button>
+    </div>
   </div>`;
   h+=`<div class="week-grid">`;
-  const today=weekDateStr(new Date().getDay()===0?6:new Date().getDay()-1);
   WEEK_DAYS.forEach((name,i)=>{
     const dayTasks=tasks.filter(t=>t.dayIndex===i);
     const dayDone=dayTasks.filter(t=>t.done).length;
@@ -1078,7 +1231,11 @@ function renderWeek(c){
       <div style="flex:1">`;
     dayTasks.forEach(t=>{
       const done=t.done?"done":""; const chk=t.done?"✓":"";
-      h+=`<div class="list-item"><div class="chk ${done}" onclick="toggleWeekTask('${t.id}')">${chk}</div><div class="li-text ${done}" onclick="editWeekTask('${t.id}',this)">${esc(t.text)}</div><div class="li-del" onclick="delWeekTask('${t.id}')">删除</div></div>`;
+      h+=`<div class="list-item" data-id="${t.id}">
+        <div class="chk ${done}" onclick="toggleWeekTask('${t.id}')">${chk}</div>
+        <div class="li-text ${done}" contenteditable="true" onblur="saveWeekEdit('${t.id}',this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(t.text)}</div>
+        <div class="li-del" onclick="delWeekTask('${t.id}')">删除</div>
+      </div>`;
     });
     h+=`</div></div>`;
   });
@@ -1089,6 +1246,8 @@ function addWeekTask(dayIndex){
   const inp=$("weekInp_"+dayIndex); if(!inp)return;
   const v=inp.value.trim(); if(!v)return;
   state.data.week.tasks.push({id:uid(),dayIndex,text:v,done:false});
+  // 首次添加任务时记录本周起始周一
+  if(!state.data.week.weekStart) state.data.week.weekStart=weekDateStr(0);
   inp.value=""; saveState(); renderWeek($("content")); renderNav();
 }
 function toggleWeekTask(id){
@@ -1099,11 +1258,29 @@ function delWeekTask(id){
   state.data.week.tasks=state.data.week.tasks.filter(x=>x.id!==id);
   saveState(); renderWeek($("content")); renderNav();
 }
-function editWeekTask(id,el){
+function saveWeekEdit(id,el){
   const t=state.data.week.tasks.find(x=>x.id===id); if(!t)return;
-  const nv=prompt("编辑任务：",t.text); if(nv===null)return;
-  const v=nv.trim(); if(!v)return;
-  t.text=v; saveState(); renderWeek($("content"));
+  const v=(el.textContent||"").trim(); if(!v){ el.textContent=t.text; return; }
+  if(v!==t.text){ t.text=v; saveState(); renderNav(); }
+}
+function archiveWeekDone(){
+  const done=state.data.week.tasks.filter(t=>t.done);
+  if(!done.length){ alert("本周还没有已完成的任务"); return; }
+  const archive={date:state.data.week.weekStart||weekDateStr(0),items:done.map(t=>({text:t.text,dayIndex:t.dayIndex}))};
+  state.data.week.history.unshift(archive);
+  state.data.week.tasks=state.data.week.tasks.filter(t=>!t.done);
+  saveState(); renderWeek($("content")); renderNav();
+  alert(`已归档 ${done.length} 个完成任务`);
+}
+function resetWeek(){
+  if(!confirm("🔄 开始新的一周？\n当前所有任务会被清空（已完成任务会先归档）。"))return;
+  const done=state.data.week.tasks.filter(t=>t.done);
+  if(done.length){
+    state.data.week.history.unshift({date:state.data.week.weekStart||weekDateStr(0),items:done.map(t=>({text:t.text,dayIndex:t.dayIndex}))});
+  }
+  state.data.week.tasks=[];
+  state.data.week.weekStart=weekDateStr(0);
+  saveState(); renderWeek($("content")); renderNav();
 }
 
 /* =========================================================
@@ -1346,12 +1523,30 @@ function closeSidebar(){ $("sidebar").classList.remove("open"); $("overlay").cla
    ========================================================= */
 let lastDay=todayStr();
 function isDailyPage(id){ const p=state.pages.find(x=>x.id===id); return p && p.type==="daily"; }
+function currentWeekStart(){ return weekDateStr(0); }
+function autoResetWeek(){
+  const ws=currentWeekStart();
+  if(state.data.week.weekStart && state.data.week.weekStart!==ws){
+    // 跨周：归档已完成任务，保留未完成任务，更新 weekStart
+    const done=state.data.week.tasks.filter(t=>t.done);
+    if(done.length){
+      state.data.week.history.unshift({date:state.data.week.weekStart,items:done.map(t=>({text:t.text,dayIndex:t.dayIndex}))});
+    }
+    state.data.week.tasks=state.data.week.tasks.filter(t=>!t.done);
+    state.data.week.weekStart=ws;
+    return true;
+  }
+  if(!state.data.week.weekStart) state.data.week.weekStart=ws;
+  return false;
+}
 function checkMidnight(){
   const now=todayStr();
   if(now!==lastDay){
     lastDay=now;
     bloggerBrowseDate=now;
     dailyBrowseDate=now;
+    const weekChanged=autoResetWeek();
+    if(weekChanged) saveState({silent:true});
     if(currentPage==="blogger"||currentPage==="plan"||currentPage==="week"||isDailyPage(currentPage)){ renderCurrent(); }
     renderNav();
   }
@@ -1370,6 +1565,8 @@ function init(){
   const p=state.pages.find(x=>x.id===lp);
   if(p){ $("topTitle").textContent=p.label; $("topSub").textContent=subText(lp); }
   setSyncStatus(syncCfg.enabled?"syncing":"off");
+  // 启动时检查是否跨周
+  if(autoResetWeek()) saveState({silent:true});
   renderNav();
   renderCurrent();
   // 若已配置云端，启动拉取+周期同步
