@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FF6B6B">
+<title>饼饼工作台 · App</title>
+<style>
+  :root{
+    --primary:#FF6B6B; --primary-d:#E85555; --accent:#4ECDC4; --accent-d:#3BB0A8;
+    --bg:#F4F5F7; --card:#FFFFFF; --text:#2D3142; --sub:#8A8F9C; --line:#ECEEF1;
+    --ok:#2BB673; --warn:#F4A259; --danger:#E5484D;
+    --shadow:0 2px 10px rgba(45,49,66,.06); --shadow-lg:0 8px 30px rgba(45,49,66,.12);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+  }
+  /* ===== App shell ===== */
+  .app{display:flex;min-height:100vh}
+  /* ===== Sidebar ===== */
+  .sidebar{
+    width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;padding:14px 10px;gap:4px;
+    position:fixed;top:0;bottom:0;left:0;z-index:40;transition:transform .25s ease;
+  }
+  .side-head{display:flex;align-items:center;gap:10px;padding:6px 8px 12px}
+  .side-logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .side-title{font-weight:700;font-size:16px}
+  .side-sub{font-size:11px;color:var(--sub)}
+  .side-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding-right:2px}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;cursor:pointer;
+    color:var(--text);font-size:14.5px;font-weight:500;transition:.15s;user-select:none;
+  }
+  .nav-item:hover{background:var(--bg)}
+  .nav-item.active{background:linear-gradient(135deg,rgba(255,107,107,.12),rgba(78,205,196,.12));color:var(--primary-d);font-weight:700}
+  .nav-item .ni-icon{font-size:18px;width:22px;text-align:center}
+  .nav-item .ni-badge{margin-left:auto;font-size:11px;background:var(--primary);color:#fff;border-radius:10px;padding:1px 7px;font-weight:700}
+  .side-foot{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+  .foot-btn{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:11px;cursor:pointer;color:var(--sub);font-size:13px;font-weight:600}
+  .foot-btn:hover{background:var(--bg);color:var(--text)}
+  .sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-on{background:var(--ok);box-shadow:0 0 0 3px rgba(43,182,115,.18)}
+  .dot-off{background:var(--danger);box-shadow:0 0 0 3px rgba(229,72,77,.16)}
+  .dot-sync{background:var(--warn);box-shadow:0 0 0 3px rgba(244,162,89,.18)}
+  /* ===== Main ===== */
+  .main{flex:1;margin-left:240px;display:flex;flex-direction:column;min-width:0}
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:12px 16px;
+  }
+  .menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:2px 6px}
+  .top-title{font-weight:700;font-size:17px}
+  .top-sub{font-size:12px;color:var(--sub)}
+  .top-spacer{flex:1}
+  .sync-chip{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff}
+  .sync-chip.on{background:rgba(43,182,115,.08);border-color:rgba(43,182,115,.3);color:var(--ok)}
+  .sync-chip.off{background:rgba(229,72,77,.06);border-color:rgba(229,72,77,.25);color:var(--danger)}
+  .sync-chip.sync{background:rgba(244,162,89,.1);border-color:rgba(244,162,89,.3);color:var(--warn)}
+  .content{padding:18px 18px 120px;max-width:860px;width:100%;margin:0 auto}
+  .page{display:none;animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* ===== Cards / generic ===== */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .card-title{font-weight:700;font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .card-title .ct-sub{font-size:12px;color:var(--sub);font-weight:500;margin-left:auto}
+  .input-row{display:flex;gap:8px;margin-bottom:12px}
+  .input-row input,.input-row textarea{
+    flex:1;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14.5px;font-family:inherit;
+    background:#FAFBFC;color:var(--text);outline:none;transition:.15s;resize:vertical;
+  }
+  .input-row input:focus,.input-row textarea:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(255,107,107,.12)}
+  .btn{border:none;border-radius:12px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-d)}
+  .btn-ghost{background:var(--bg);color:var(--text)}
+  .btn-ghost:hover{background:#E9EBEF}
+  .btn-accent{background:var(--accent);color:#fff}
+  .btn-accent:hover{background:var(--accent-d)}
+  .btn-sm{padding:7px 12px;font-size:13px;border-radius:10px}
+  .btn-danger{background:rgba(229,72,77,.1);color:var(--danger)}
+  /* ===== List items ===== */
+  .list-item{display:flex;align-items:flex-start;gap:11px;padding:12px 4px;border-bottom:1px solid var(--line)}
+  .list-item:last-child{border-bottom:none}
+  .chk{width:22px;height:22px;border-radius:7px;border:2px solid #D5D8DE;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;transition:.15s;margin-top:1px}
+  .chk.done{background:var(--ok);border-color:var(--ok)}
+  .li-text{flex:1;font-size:14.5px;word-break:break-word;cursor:text}
+  .li-text.done{color:var(--sub);text-decoration:line-through}
+  .li-del{color:var(--sub);cursor:pointer;padding:2px 6px;border-radius:8px;font-size:13px;flex-shrink:0}
+  .li-del:hover{background:rgba(229,72,77,.1);color:var(--danger)}
+  .empty{color:var(--sub);text-align:center;font-size:13.5px;padding:24px 0}
+  /* ===== Plan history ===== */
+  .prog-wrap{display:flex;align-items:center;gap:14px}
+  .prog-ring{--p:0;width:64px;height:64px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(var(--ok) calc(var(--p)*1%), #E9EBEF 0);display:flex;align-items:center;justify-content:center}
+  .prog-ring i{width:50px;height:50px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:15px;color:var(--text)}
+  .prog-meta b{font-size:20px}
+  .prog-meta span{color:var(--sub);font-size:13px}
+  .sec-label{font-size:13px;font-weight:700;color:var(--sub);margin:18px 2px 8px;display:flex;align-items:center;gap:7px}
+  .hist-day{background:var(--card);border-radius:14px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden}
+  .hist-head{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;user-select:none}
+  .hist-head .hd-date{font-weight:700;font-size:14.5px}
+  .hist-head .hd-count{font-size:12px;color:var(--sub);background:var(--bg);padding:2px 9px;border-radius:10px}
+  .hist-head .hd-arrow{margin-left:auto;color:var(--sub);transition:.2s;font-size:13px}
+  .hist-head.open .hd-arrow{transform:rotate(180deg)}
+  .hist-body{display:none;padding:0 15px 8px}
+  .hist-body.open{display:block}
+  /* ===== Blogger ===== */
+  .blogger-card{background:linear-gradient(135deg,#fff, #FFF6F2);border:1px solid rgba(255,107,107,.18)}
+  .bc-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .bc-avatar{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+  .bc-name{font-weight:800;font-size:17px}
+  .bc-platform{font-size:12px;color:var(--sub);margin-top:2px}
+  .pf-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;margin-left:8px;vertical-align:middle}
+  .pf-dy{background:rgba(255,107,107,.14);color:var(--primary-d)}
+  .pf-xhs{background:rgba(255,45,85,.12);color:#E0366B}
+  .bc-video{font-size:13.5px;color:var(--text);background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px}
+  .bc-reason{font-size:14px;line-height:1.65;color:#3a3f4d}
+  .bc-reason b{color:var(--primary-d)}
+  .bc-foot{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .bc-go{flex:1;text-align:center}
+  .bc-daynav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+  .bc-daynav button{background:#fff;border:1px solid var(--line);border-radius:10px;width:36px;height:36px;font-size:17px;cursor:pointer;color:var(--text)}
+  .bc-daynav .cur{font-weight:700;font-size:14px;min-width:120px;text-align:center}
+  .bc-note{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;font-family:inherit;margin-top:12px;resize:vertical;background:#FAFBFC;outline:none}
+  .bc-note:focus{border-color:var(--primary);background:#fff}
+  /* ===== Save indicator ===== */
+  .save-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:60;pointer-events:none}
+  .save-toast.show{opacity:.95;transform:translateX(-50%) translateY(0)}
+  /* ===== Modal ===== */
+  .mask{position:fixed;inset:0;background:rgba(20,22,30,.45);z-index:80;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(2px)}
+  .mask.show{display:flex}
+  .modal{background:#fff;border-radius:20px;width:100%;max-width:440px;max-height:86vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:pop .2s ease}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{display:flex;align-items:center;padding:18px 18px 6px}
+  .modal-head h3{margin:0;font-size:17px}
+  .modal-head .x{margin-left:auto;font-size:22px;color:var(--sub);cursor:pointer;line-height:1;padding:0 4px}
+  .modal-body{padding:8px 18px 18px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#4a4f5c}
+  .field input,.field textarea,.field select{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:14px;font-family:inherit;background:#FAFBFC;outline:none}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--primary);background:#fff}
+  .hint{font-size:12px;color:var(--sub);line-height:1.6;background:var(--bg);border-radius:11px;padding:11px 13px;margin-top:4px}
+  .hint code{background:#fff;padding:1px 6px;border-radius:6px;font-size:11.5px;border:1px solid var(--line)}
+  .modal-foot{display:flex;gap:9px;padding:0 18px 18px}
+  .modal-foot .btn{flex:1}
+  .mod-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 10px;border-radius:12px}
+  .mod-toggle:hover{background:var(--bg)}
+  .mod-toggle .mt-name{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14.5px}
+  .switch{width:46px;height:27px;border-radius:14px;background:#D5D8DE;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+  .switch.on{background:var(--ok)}
+  .switch i{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:.2s}
+  .switch.on i{left:22px}
+  .mod-del{color:var(--danger);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .mod-del:hover{background:rgba(229,72,77,.1)}
+  .add-mod{display:flex;gap:8px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line)}
+  .add-mod input{flex:1;border:1px solid var(--line);border-radius:11px;padding:9px 11px;font-size:14px;font-family:inherit;outline:none;background:#FAFBFC}
+  .add-mod input:focus{border-color:var(--primary);background:#fff}
+  /* ===== Overlay for mobile sidebar ===== */
+  .overlay{position:fixed;inset:0;background:rgba(20,22,30,.4);z-index:35;display:none}
+  .overlay.show{display:block}
+  /* ===== Responsive ===== */
+  @media(max-width:820px){
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}
+    .main{margin-left:0}
+    .menu-btn{display:block}
+    .content{padding:14px 14px 110px}
+  }
+  .status-ok{color:var(--ok);font-weight:700}
+  .status-bad{color:var(--danger);font-weight:700}
+  .sync-notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:12px}
+  .sync-notice code{background:#fff;padding:1px 5px;border-radius:5px;font-size:11.5px}
+  .btn-danger{background:#ef4444;color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:14px;cursor:pointer}
+  .btn-danger:active{opacity:.85}
+  /* ===== Small progress bar (list pages) ===== */
+  .bar-wrap{height:10px;border-radius:5px;background:#E9EBEF;overflow:hidden;margin:6px 0 12px}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--ok),var(--accent));width:0%;transition:width .3s ease}
+  .bar-meta{font-size:12px;color:var(--sub);margin-bottom:6px}
+  /* ===== Daily inspiration card ===== */
+  .daily-card{background:linear-gradient(135deg,#fff,#FFF9F5);border:1px solid rgba(255,107,107,.16)}
+  .daily-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+  .daily-tag{font-size:11px;font-weight:700;background:rgba(255,107,107,.12);color:var(--primary-d);padding:3px 10px;border-radius:20px}
+  .daily-body{font-size:14.5px;line-height:1.7;color:#3a3f4d;margin:10px 0}
+  .daily-body b{color:var(--primary-d)}
+  .daily-reason{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13.5px;color:var(--text);line-height:1.7;margin-top:10px}
+  .daily-reason b{color:var(--accent-d)}
+  .daynav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px}
+  .daynav button{background:#fff;border:1px solid var(--line);border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--text)}
+  .daynav .cur{font-weight:700;font-size:14px;min-width:110px;text-align:center}
+  .daily-saved{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  /* ===== Weekly plan ===== */
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  @media(max-width:820px){.week-grid{grid-template-columns:1fr}}
+  .week-day{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:12px;display:flex;flex-direction:column;gap:8px}
+  .week-day.today{border:2px solid var(--primary)}
+  .wd-head{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:13.5px}
+  .wd-dayname{color:var(--sub);font-size:12px}
+  .week-day .input-row{margin-bottom:0}
+  .week-day .input-row input{padding:8px 10px;font-size:13px;border-radius:10px}
+  .week-day .list-item{padding:8px 2px;border-bottom:1px solid var(--line)}
+  .week-day .list-item:last-child{border-bottom:none}
+  .week-day .li-text{font-size:13.5px}
+  .week-day .chk{width:18px;height:18px;border-radius:6px}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="饼饼工作台">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="theme-color" content="#6C5CE7">
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <div class="side-logo">🍜</div>
+      <div>
+        <div class="side-title">饼饼工作台</div>
+        <div class="side-sub">探店博主 · 桂林秀峰</div>
+      </div>
+    </div>
+    <div class="side-scroll" id="navList"></div>
+    <div class="side-foot">
+      <div class="foot-btn" onclick="openSyncModal()">
+        <span class="sync-dot" id="footDot"></span><span id="footSyncText">云端未连接</span>
+      </div>
+      <div class="foot-btn" onclick="openModules()">⚙️ 管理模块</div>
+      <div class="foot-btn" onclick="openBackup()">💾 数据备份</div>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div>
+        <div class="top-title" id="topTitle">每日计划</div>
+        <div class="top-sub" id="topSub">今天也要认真探店呀</div>
+      </div>
+      <div class="top-spacer"></div>
+      <div class="sync-chip off" id="syncChip" onclick="openSyncModal()">
+        <span class="sync-dot dot-off" id="chipDot"></span>
+        <span id="chipText">未连接</span>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="save-toast" id="saveToast">✅ 已自动保存</div>
+
+<!-- Sync Modal -->
+<div class="mask" id="syncMask">
+  <div class="modal">
+    <div class="modal-head"><h3>☁️ 云端同步</h3><span class="x" onclick="closeModal('syncMask')">×</span></div>
+    <div class="modal-body">
+      <div class="sync-notice">
+        🔗 <strong>首次使用请连接你的 GitHub</strong>：在下方填写你的私有仓库 <code>bingbing99827/bingbing-workbench</code> 与 Token（仅存本机浏览器），保存后即自动同步、跨设备通用。<br>⚠️ Token 只保存在你这台设备的浏览器里，不会上传到任何服务器。
+      </div>
+      <div class="field">
+        <label>同步方式</label>
+        <select id="syncMode" onchange="onSyncModeChange()">
+          <option value="github">GitHub 仓库（推荐，你已在用）</option>
+          <option value="json">自定义 JSON API（我有后端）</option>
+        </select>
+      </div>
+      <div id="githubFields">
+        <div class="field"><label>仓库（owner/repo）</label><input id="ghRepo" placeholder="username/my-workbench" value=""></div>
+        <div class="field"><label>分支</label><input id="ghBranch" placeholder="main" value="main"></div>
+        <div class="field"><label>Personal Access Token</label><input id="ghToken" type="password" placeholder="ghp_..." value=""><div class="hint" id="ghTokenHint" style="display:none">✅ 已内置自动同步凭据，留空即沿用。想换成自己的 token 直接填即可。</div></div>
+        <div class="hint">
+          🔒 建议用<strong>私有仓库</strong>。生成 token：GitHub → 右上角头像 → Settings → Developer settings →
+          <strong>Personal access tokens</strong> → 生成一个只勾 <code>repo</code> 权限的 token。<br>
+          数据会存成仓库里一个名为 <code>workbench-&lt;文档ID&gt;.json</code> 的文件。Token 仅保存在本机浏览器。
+        </div>
+      </div>
+      <div id="jsonFields" style="display:none">
+        <div class="field"><label>API 地址（GET 取 / PUT 存 整个 JSON）</label><input id="jsonUrl" placeholder="https://your.api/workbench"></div>
+        <div class="hint">GET 返回当前 JSON；PUT（body 为 JSON）保存。需服务端允许跨域。</div>
+      </div>
+      <div class="field">
+        <label>文档 ID（多设备填相同值即同步同一份）</label>
+        <input id="docId" value="1" placeholder="1">
+      </div>
+      <div id="syncTestResult" style="font-size:13px;margin:6px 0"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" onclick="disableBuiltinSync()">断开同步</button>
+      <button class="btn btn-ghost" onclick="closeModal('syncMask')">取消</button>
+      <button class="btn btn-ghost" onclick="testSync()">测试连接</button>
+      <button class="btn btn-primary" onclick="saveSync()">保存并同步</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modules Modal -->
+<div class="mask" id="modMask">
+  <div class="modal">
+    <div class="modal-head"><h3>⚙️ 管理模块</h3><span class="x" onclick="closeModal('modMask')">×</span></div>
+    <div class="modal-body" id="modList"></div>
+    <div class="modal-body" style="padding-top:0">
+      <div class="add-mod">
+        <input id="newModName" placeholder="新模块名称，如：读书笔记">
+        <button class="btn btn-primary btn-sm" onclick="addModule()">+ 添加</button>
+      </div>
+      <div class="hint" style="margin-top:10px">自定义模块可选「清单」或「自由笔记」。内置模块关闭后只是隐藏，数据保留。</div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="closeModal('modMask')">完成</button></div>
+  </div>
+</div>
+
+<!-- Backup Modal -->
+<div class="mask" id="backupMask">
+  <div class="modal">
+    <div class="modal-head"><h3>💾 数据备份</h3><span class="x" onclick="closeModal('backupMask')">×</span></div>
+    <div class="modal-body">
+      <div class="hint" style="margin-bottom:12px">所有内容会自动存到本机浏览器。换手机/清缓存前，建议导出一份备份文件。</div>
+      <div class="modal-foot" style="padding:0;margin-bottom:12px">
+        <button class="btn btn-accent" style="flex:1" onclick="exportData()">⬇️ 导出备份</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('impFile').click()">⬆️ 导入恢复</button>
+      </div>
+      <input type="file" id="impFile" accept="application/json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-danger" style="width:100%" onclick="wipeData()">🗑️ 清空本机全部数据</button>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="closeModal('backupMask')">关闭</button></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   饼饼工作台 · App 版  (单文件 / 无外部依赖 / 本地优先 + 云端同步)
+   ========================================================= */
+const LS_KEY = 'bingbing_workstation_app_v1';   // 本机数据
+const LS_SYNC = 'bingbing_workstation_sync_v1';  // 云端配置
+const APP_VER = '2.0';
+
+/* ---------- 每日博主推荐 数据集（起步样例，可编辑扩展） ---------- */
+const DATA_BLOGGERS = [
+  {name:"大LOGO吃遍中国",pf:"dy",video:"《3000块一顿的桂林私房菜，到底值不值？》",reason:"招牌『贵的东西先吃一遍』人设鲜明，精准戳中『普通人吃不起但想看』的猎奇心理，完播率拉满；探店专挑高端/网红店制造话题，评论区『求地址』『太壕了』高频互动，触发平台持续推荐。"},
+  {name:"特别乌啦啦",pf:"dy",video:"《街头10元小吃，居然比网红店好吃？》",reason:"无厘头『万物皆可尝』+ 夸张表情，前3秒悬念极强；接地气口语配街头小店，真实感强、易引发模仿评论；高频日更维持粉丝粘性，算法稳定给量。"},
+  {name:"密子君",pf:"dy",video:"《挑战桂林最辣米粉！》",reason:"大胃王+探店双钩子叠加，视觉冲击强；早年建立的IP信任度高，老粉追看稳定；标题用『挑战/最』制造冲突感，点击率与完播双高。"},
+  {name:"阿星探店",pf:"dy",video:"《夫妻俩找桂林最正宗老字号》",reason:"夫妻档真实探店，『帮粉丝找正宗味道』人设讨喜；实拍+试吃+讲价全程代入感强；主打本地小吃，评论区本地人认同感高、自发传播。"},
+  {name:"桂林吃货小分队",pf:"dy",video:"《桂林人自己都未必知道的5家神店》",reason:"本地身份建立信任，『信息差』选题制造必看性；短视频+定位打卡，转化到店率高；评论区『求下一期』形成稳定追更，本地流量闭环好。"},
+  {name:"桂林周末去哪玩",pf:"xhs",video:"《周末两天一夜桂林citywalk路线》",reason:"『周末』精准戳本地用户空闲时段，收藏率高；图文排版清爽+地图标点，实用性强易被转发；小红书女性用户占比高，探店+打卡内容天然适配。"},
+  {name:"房琪kiki",pf:"dy",video:"《桂林山水里的浪漫，藏着这个角落》",reason:"文案美学天花板，金句频出引发共鸣转发；风景+人文叙事拉升完播与收藏；虽非纯探店，但其『情绪价值+地点』打法值得做文旅探店时借鉴。"},
+  {name:"its小宇",pf:"xhs",video:"《在桂林开了家小店，探店博主都来打卡》",reason:"第一视角+店主视角反差新颖；小红书高颜值图+真诚叙事，收藏评论双高；『开店人』身份带来信任，适合做品牌合作类探店参考。"},
+  {name:"我是马小宇",pf:"dy",video:"《桂林夜市最值得吃的10样》",reason:"清单体『Top10』结构清晰，用户易收藏照着吃；夜市烟火气真实，前3秒『来桂林必看』钩子强；评论区互动打卡形成UGC循环。"},
+  {name:"多余的华丽",pf:"xhs",video:"《小众咖啡馆探店｜桂林宝藏角落》",reason:"小众+颜值定位精准切中年轻女性『出片』需求，收藏率极高；小红书图文审美在线，标签运营到位；适合做『探店+生活方式』调性参考。"},
+  {name:" Poverty Food 美食贫民窟",pf:"dy",video:"《5块钱吃到撑的桂林路边摊》",reason:"『低价+量大』反差吸睛，下沉真实感强；街头跟拍节奏快，完播率高；评论区『求城市』催更，利于做系列化本地探店。"},
+  {name:"乌啦啦的饭",pf:"xhs",video:"《探店翻车？真实测评才有人看》",reason:"反套路『翻车实录』制造真实感与信任；小红书用户厌恶软广，真实测评反而涨粉；负面+正面平衡叙述，评论区讨论热烈。"},
+  {name:"桂林生活美食",pf:"dy",video:"《本地人才知道的米粉老店》",reason:"『本地人』背书+老店情怀，信任度高；内容短平快、信息密度大；垂直本地美食，粉丝精准，适合品牌投就近探店。"},
+  {name:"特别会吃的桃酱",pf:"xhs",video:"《跟着本地人吃桂林，3天不重样》",reason:"『本地人带路』叙事降低决策成本，收藏率高；路线化内容易种草；小红书合集式排版提升浏览时长。"},
+  {name:"大胃王mini",pf:"dy",video:"《桂林小吃大胃王挑战赛》",reason:"挑战+大胃王组合强钩子，前3秒即抓眼球；娱乐化探店拓宽受众；适合做活动型/节点型探店内容。"},
+  {name:"小文哥吃广州",pf:"dy",video:"《把桂林菜带到广州人面前》",reason:"跨城对比制造话题与讨论；地域梗引发双方粉丝互动；探店+文化碰撞叙事，完播与评论双优。"},
+  {name:"一颗KK",pf:"xhs",video:"《探店博主私藏｜桂林这家人均30》",reason:"『私藏/人均』关键词精准命中性价比需求，收藏高；小红书清单体排版清爽；真实价格标注建立信任。"},
+  {name:"阿星和她的店",pf:"xhs",video:"《在桂林开咖啡店的一天vlog》",reason:"vlog+探店结合，陪伴感强、完播高；小红书『开店日常』自带流量；适合做『人格化IP+探店』长期打法参考。"},
+  {name:"吃喝玩乐桂林",pf:"dy",video:"《桂林必吃榜Top8，本地人认证》",reason:"『必吃榜』权威感+清单结构，用户照单消费；本地人认证增强可信度；适合做系列化『城市必吃』栏目。"},
+  {name:"盗月社食遇记",pf:"dy",video:"《在桂林，我们找到了最暖的一碗粉》",reason:"人物故事+食物情感叙事，催泪转发率高；『人情味』差异化打法在探店红海中突围；适合做有温度的品牌合作内容。"},
+  {name:"企鹅吃喝指南",pf:"xhs",video:"《桂林米粉图鉴：20家横向测评》",reason:"专业横向测评建立权威，收藏率极高；小红书长图文详实，搜索流量稳定；适合做『干货型』探店建立专家人设。"},
+  {name:"小高姐的魔法调料",pf:"dy",video:"《在家复刻桂林名店味道》",reason:"教程+探店反差新颖，实用性强；高黏性粉丝追看；虽偏教程，但其『讲透原理』的内容深度值得探店借鉴以提升专业感。"},
+  {name:"桂林周边游",pf:"xhs",video:"《探店+周边游｜周末微度假》",reason:"『探店+游』组合拓宽选题，收藏转发双高；小红书度假类内容女性向强；适合做『生活方式博主』延展。"},
+  {name:"老饭骨",pf:"dy",video:"《桂林师傅的拿手菜，探店学一手》",reason:"名厨IP背书，权威感强；『学一手』实用钩子提升完播；虽偏做菜，其『大师亲授』叙事可迁移到『探店+学做法』。"}
+];
+
+/* ---------- 每日灵感库（桂林探店/抖音/小红书方向，按日轮换） ---------- */
+const DAILY_DATA = {
+  idea:[
+    {title:"秀峰区开了10年以上的米粉老店",tags:["本地信任","老店情怀"],desc:"专门走访秀峰片区开了10年+的米粉店，挖掘『本地人吃了半辈子』的故事。",why:"『老店』自带信任感，『10年+』数字增强说服力；本地人认同感高，评论区容易触发回忆杀和打卡讨论。"},
+    {title:"桂林人夏天必喝的5家糖水铺",tags:["时令","清单体"],desc:"夏季专题，搜罗桂林本土糖水/清补凉店，给出每家招牌和人均。",why:"时令选题精准踩中当下需求，『必喝』制造必看性，清单体易收藏照着吃，适合小红书合集。"},
+    {title:"挑战100元吃遍桂林夜市",tags:["挑战","低价"],desc:"带100元现金/手机余额，从街头吃到街尾，记录真实价格和分量。",why:"『挑战+低价』双钩子，下沉真实感强；前3秒抛出预算悬念，完播率高，评论区会催更『下一期去哪个夜市』。"},
+    {title:"桂林这家小店，每天只卖3小时",tags:["稀缺性","饥饿营销"],desc:"探访每天限时营业的小吃店，记录排队场景和卖完瞬间。",why:"『只卖3小时』制造稀缺感和紧迫感，用户好奇『为什么只卖3小时』，完播与互动双高。"},
+    {title:"外地人来了桂林，第一家店千万别去这家",tags:["反套路","避雷"],desc:"以『避雷』角度切入，指出游客常踩雷的网红店，再推荐附近本地人真正吃的店。",why:"反套路标题党但内容真实，小红书用户特别吃『避雷』这套；评论区争论带动推荐流量。"},
+    {title:"桂林巷子里找不到招牌的宝藏店",tags:["信息差","宝藏"],desc:"寻找没有门头或门头极小的巷子里小店，突出『只有本地人知道』。",why:"『找不到招牌』强化信息差和探索感，满足用户『挖宝』心理，收藏率极高。"},
+    {title:"复刻桂林网红店的招牌菜，成本居然只要XX",tags:["教程","性价比"],desc:"买食材在家复刻某家网红餐厅招牌菜，对比店里价格和自制成本。",why:"复刻+对比制造实用价值，抖音教程类完播高；『成本』关键词易引发评论互动。"},
+    {title:"桂林早餐地图：一周7天不重样",tags:["系列","实用"],desc:"连续一周每天打卡一种桂林早餐，米粉/油茶/糯米饭/卷粉轮着来。",why:"系列化内容培养追更习惯，『一周不重样』给用户提供完整参考方案，收藏转发高。"},
+    {title:"带外地朋友吃桂林，我会这样安排一整天",tags:["路线","社交"],desc:"从早到晚设计一条本地人带朋友吃的路线，包含3-4家店和小吃。",why:"路线型内容易种草，『带朋友』降低广告感；适合小红书画地图+长图文。"},
+    {title:"桂林这家店的老板比菜还有故事",tags:["人物故事","情感"],desc:"不只拍菜，重点拍店主/厨师的故事、手艺传承。",why:"人物故事拉高内容温度，差异化避开单纯吃播红海；情感叙事提升转发。"},
+    {title:"用抖音热梗拍桂林探店：沉浸式/第一人称/ASMR",tags:["热梗","形式创新"],desc:"结合当下抖音热门拍摄形式（沉浸式吃粉、第一人称逛店、咀嚼ASMR）做桂林探店。",why:"热梗形式自带流量，平台算法对时下流行模板有扶持；创新形式易上热门。"},
+    {title:"桂林周边1小时，藏着这些神仙小店",tags:["周边","微度假"],desc:"走出市区，去阳朔/灵川/临桂等地探小店，结合短途游。",why:"拓宽选题边界，『周边+探店』组合吸引周末出行人群，小红书收藏率高。"},
+    {title:"桂林大学生最爱的平价食堂/小吃街",tags:["学生党","平价"],desc:"去高校周边找学生爱去的小吃店，突出性价比。",why:"学生党是抖音/小红书高活跃用户，『平价』关键词精准，互动和粉丝转化好。"},
+    {title:"测评桂林3家网红螺蛳粉，哪家最正宗？",tags:["测评","争议"],desc:"横向对比3家桂林人气螺蛳粉，从汤底、粉质、配料打分。",why:"横向测评自带权威感，『最正宗』易引发本地人讨论和站队，评论量爆炸。"},
+    {title:"桂林菜市场里的隐藏美食",tags:["市井","烟火气"],desc:"逛菜市场，挖掘熟食摊、卤味、糕点等隐藏美食。",why:"菜市场烟火气真实接地气，差异化避开精致探店；市井感容易引发共鸣。"},
+    {title:"桂林咖啡地图：藏在老楼里的咖啡馆",tags:["小众","颜值"],desc:"探访桂林有特色的独立咖啡馆，适合小红书高颜值图文。",why:"咖啡馆受众年轻女性多，小红书天然适配；『藏在老楼里』制造探索感。"},
+    {title:"跟桂林大爷大妈抢座位的老字号",tags:["本地生活","真实"],desc:"记录需要跟本地老人一起排队的老字号，突出正宗和烟火气。",why:"『大爷大妈』是『正宗』活招牌，真实场景说服力强，评论区本地人认证。"},
+    {title:"桂林深夜食堂：开到凌晨3点的小店",tags:["深夜","情绪"],desc:"凌晨探店，拍夜晚食客故事和治愈食物。",why:"深夜情绪价值高，『凌晨3点』制造时间冲突感，适合短视频情绪渲染。"},
+    {title:"桂林伴手礼红黑榜： tourists别乱买",tags:["红黑榜","避坑"],desc:"测评桂林常见伴手礼（桂花糕/辣椒酱/罗汉果等），推荐值得买的。",why:"红黑榜结构清晰，『别乱买』制造紧迫感， tourists 和本地人都会看。"},
+    {title:"桂林最辣挑战：从微辣到变态辣",tags:["挑战","刺激"],desc:"挑战桂林不同辣度的米粉/湘菜店，记录反应。",why:"挑战类内容易上热门，人物真实反应是完播关键，适合抖音。"},
+    {title:"桂林人的下午茶：油茶+粑粑",tags:["文化","特色"],desc:"专门介绍桂林油茶文化和搭配小吃，带文化科普。",why:"文化+美食结合，内容有深度；『地方特色』差异化，适合中长视频。"},
+    {title:"花50元在桂林吃一天，能吃到什么？",tags:["低价","一天系列"],desc:"50元预算从早吃到晚，展示真实消费清单。",why:"低价+全天叙事有看点，数字预算制造悬念，完播率好。"},
+    {title:"桂林那些『消失中』的老味道",tags:["情怀","稀缺"],desc:"寻找濒临消失的传统小吃或老店，记录手艺人的故事。",why:"情怀牌易引发转发和讨论，『消失中』增强紧迫感和情感共鸣。"},
+    {title:"桂林新店测评：这个月开了哪些值得去的？",tags:["新店","时效"],desc:"每月汇总桂林新开餐厅/咖啡店，快速测评。",why:"时效性强，信息新鲜，适合做月度固定栏目培养追更。"},
+    {title:"桂林人私藏的夜宵烧烤摊",tags:["夜宵","烧烤"],desc:"探访本地人才知道的烧烤摊/夜宵店，突出秘方和氛围。",why:"夜宵+烧烤是社交货币，『私藏』制造信息差，评论区互动高。"},
+    {title:"用游客视角重走桂林，我发现完全不一样",tags:["反差","本地人视角"],desc:"假装游客重新体验桂林热门景点/餐厅，对比本地人真实看法。",why:"游客vs本地人反差制造冲突，观点鲜明，评论区讨论热烈。"},
+    {title:"桂林素食/轻食探店：减脂期也能吃",tags:["健康","细分"],desc:"针对健身/减脂人群，探桂林轻食、素食店。",why:"细分人群精准，健康趋势长期有需求，适合小红书图文。"},
+    {title:"桂林早餐的『隐藏吃法』",tags:["攻略","本地人"],desc:"揭秘桂林米粉、糯米饭等的本地隐藏吃法/加料秘籍。",why:"『隐藏吃法』给用户实用信息，易收藏和模仿，传播性强。"},
+    {title:"翻牌粉丝推荐：粉丝说这家好吃我就来了",tags:["互动","UGC"],desc:"随机选取粉丝评论推荐的店去探，@粉丝。",why:"增强粉丝参与感，UGC内容真实可信，评论区互动和粘性双提升。"},
+    {title:"桂林亲子友好餐厅合集",tags:["亲子","合集"],desc:"整理适合带娃家庭的餐厅，突出环境、儿童餐、性价比。",why:"亲子是强消费场景，合集实用，小红书宝妈群体收藏率高。"}
+  ],
+  hot:[
+    {title:"『本地人带路』系列",desc:"用本地人身份带观众找店，强调『不是游客店』。",why:"信任感强，差异化明显；『本地人』三个字是小红书和抖音探店流量密码。"},
+    {title:"『挑战/测评』系列",desc:"挑战最辣/最大/最贵/最便宜，或横向测评多家店。",why:"冲突感+悬念强，完播率高；容易引发站队和评论互动。"},
+    {title:"『信息差/宝藏店』系列",desc:"主打『只有本地人知道』『没有招牌』『藏在巷子里』。",why:"满足用户挖宝心理，收藏率高，适合小红书。"},
+    {title:"『红黑榜/避雷』系列",desc:"直接点名哪些值得吃、哪些是坑，观点鲜明。",why:"小红书用户极吃避雷内容，争议带来高互动和推荐。"},
+    {title:"『系列化清单』：Top5/10",desc:"『桂林必吃Top8』『秀峰区最值得去的5家咖啡馆』。",why:"清单体结构清晰、收藏率高，算法对系列内容有追更激励。"},
+    {title:"『情感/人物故事』叙事",desc:"不只拍菜，拍老板、手艺、街坊故事。",why:"情感内容差异化，转发率高，容易形成IP记忆点。"},
+    {title:"『沉浸式/第一人称』拍摄",desc:"不用配音，用环境音+第一视角逛店。",why:"沉浸式体验感强，完播率高；抖音对这类形式有流量扶持。"},
+    {title:"『翻牌粉丝/评论区带路』",desc:"根据粉丝留言决定探店目的地，@粉丝。",why:"强互动，粉丝粘性高，内容真实可信。"},
+    {title:"『反套路标题党』",desc:"标题先说『别来』『踩雷』，正文再反转。",why:"点击率爆炸；但内容必须真实，否则反噬。"},
+    {title:"『时令/节日节点』",desc:"端午粽子、中秋桂花、夏季糖水、冬季火锅。",why:"踩中节日流量高峰，搜索量和推荐量都会提升。"},
+    {title:"『低价/穷鬼套餐』",desc:"主打人均20元以下、学生党友好。",why:"经济下行期低价内容流量好，评论区共鸣强。"},
+    {title:"『复刻/在家做』",desc:"把店里招牌菜买回家复刻，做教程。",why:"延伸探店内容生命周期，触达想学做菜的人群。"},
+    {title:"『城市对比/地域梗』",desc:"桂林米粉 vs 柳州螺蛳粉，桂林菜 vs 湘菜。",why:"地域对比引发讨论，双方用户都会进评论区。"},
+    {title:"『一天系列』",desc:"50元吃一天、24小时吃桂林、一周早餐不重样。",why:"完整叙事有看点，适合培养追更习惯。"},
+    {title:"『颜值/出片』路线",desc:"重点拍环境、摆盘、打卡位，适合小红书。",why:"女性用户占比高，颜值内容收藏转发好。"},
+    {title:"『ASMR/咀嚼音』",desc:"放大嗦粉、咬脆骨、喝汤的声音。",why:"ASMR有专门受众，完播率高，抖音有流量池。"},
+    {title:"『老店/非遗/手艺人』",desc:"聚焦老字号、非遗小吃、坚持手工的店。",why:"情怀+稀缺性，内容易获平台正向推荐，也能建立深度人设。"},
+    {title:"『探店+轻剧情』",desc:"加入小剧场、情景对话、梗。",why:"娱乐化降低广告感，提升完播和分享欲。"},
+    {title:"『数据复盘型』",desc:"晒一条视频的后台数据，讲为什么爆了。",why:"同行和 aspiring 创作者爱看，能建立专业人设。"},
+    {title:"『热点借势』",desc:"结合当下社会热点/网络梗做探店。",why:"借势热点能在短时间内获得额外曝光。"},
+    {title:"『素人真实反应』",desc:"带素人朋友第一次吃，拍真实反应。",why:"真实反应最有感染力，比博主自说自话更可信。"},
+    {title:"『幕后vlog』",desc:"拍一次探店背后的准备、踩点、剪辑过程。",why:"满足粉丝窥探欲，增强IP人格化和粘性。"},
+    {title:"『盲测/盲吃』",desc:"蒙眼测评不同店的同一道菜。",why:"盲测公平性强，结果有悬念，互动率高。"},
+    {title:"『方言+本地梗』",desc:"用桂林话或本地梗增加亲切感。",why:"强化本地属性，本地人认同，差异化明显。"},
+    {title:"『把外地朋友吃哭』",desc:"带外地朋友体验桂林辣/酸/特色，拍反应。",why:"外地反应天然有冲突和笑点，适合抖音。"},
+    {title:"『夜宵/深夜』场景",desc:"深夜探店，主打治愈和氛围。",why:"深夜情绪价值高，特定时段流量池稳定。"},
+    {title:"『探店+知识科普』",desc:"讲桂林米粉历史、油茶做法、菜系渊源。",why:"增加内容厚度，建立专家人设，适合中长视频。"},
+    {title:"『夫妻/闺蜜/情侣搭档』",desc:"双人出镜，增加互动和化学反应。",why:"搭档关系增加看点，比单人探店更生动。"},
+    {title:"『极限打卡』",desc:"一天跑10家店、一小时吃5碗粉。",why:"极限挑战有视觉冲击，完播率和讨论度高。"},
+    {title:"『改造/逆袭』",desc:"帮一家老店拍视频，记录客流变化。",why:"故事性强，有社会价值，易获情感共鸣和平台推荐。"}
+  ],
+  review:[
+    {title:"前3秒有没有钩子？",checklist:["是否在前3秒抛出悬念/冲突/问题","是否有视觉或语言钩子","用户会不会因为前3秒继续看"],why:"前3秒决定完播率，没有钩子基本等于白拍。"},
+    {title:"选题是否切中目标人群？",checklist:["这条内容是给谁看的","桂林本地人/游客/学生党/宝妈？","他们看了会不会产生需求"],why:"人群越精准，互动和转化越高，算法推荐越稳。"},
+    {title:"标题是否有搜索/点击关键词？",checklist:["是否包含地点、价格、数字、冲突","是否有『必吃/避雷/Top/挑战』等关键词","小红书写法是否加了emoji和痛点"],why:"标题决定点击率，也决定搜索长尾流量。"},
+    {title:"画面是否稳定、光线充足？",checklist:["是否手抖","食物/环境是否看清","是否有足够近景/特写"],why:"基础画质影响专业感和完播，粗糙画面直接劝退。"},
+    {title:"节奏是否紧凑？",checklist:["有没有冗长空镜","转场是否自然","整条视频有无尿点"],why:"抖音完播是关键，节奏拖沓会流失用户。"},
+    {title:"有没有引导互动？",checklist:["是否在结尾/评论区提问题","是否引导点赞收藏关注","有没有@相关账号或话题"],why:"互动率是算法推荐的重要指标，要主动引导。"},
+    {title:"信息是否真实可信？",checklist:["价格/地址是否准确","是否夸大或虚假宣传","有没有广告标识"],why:"真实是长期做号根基，虚假内容易被举报限流。"},
+    {title:"有没有差异化记忆点？",checklist:["你的人设/口头禅/视觉风格是什么","和别的桂林探店号有什么不同","用户看了会不会记住你"],why:"没有差异化，内容再好也只是流量过客。"},
+    {title:"评论区维护了吗？",checklist:["是否回复了前30分钟评论","是否置顶了引导性评论","有没有处理负面评论"],why:"评论区活跃能二次加热视频，也是粉丝关系维护关键。"},
+    {title:"发布时间合适吗？",checklist:["是否踩中饭前/睡前/周末高峰","是否蹭到当日热点","小红书/抖音高峰是否不同"],why:"发布时间影响初始流量池，进而影响推荐。"},
+    {title:"标签和定位加了没？",checklist:["是否加了相关话题标签","是否定位到店","是否@平台本地生活号"],why:"标签和定位帮助算法识别内容，推荐给本地用户。"},
+    {title:"封面/首帧是否吸睛？",checklist:["封面是否突出重点","有没有大字/冲突/高颜值","小红书画报是否风格统一"],why:"封面决定点击，首帧决定前3秒。"},
+    {title:"BGM 是否合适？",checklist:["BGM节奏是否匹配画面","是否用了平台近期热门音乐","音量是否盖过人声"],why:"BGM影响情绪和完播，热门音乐也有流量加成。"},
+    {title:"是否有明确的行动指令？",checklist:["用户看完知道该做什么吗","是否引导收藏/到店/评论","是否有『下周去哪家你们定』"],why:"行动指令提高互动和转化，是爆款必备。"},
+    {title:"数据哪里跌了？",checklist:["完播率多少","互动率多少","转发/收藏/评论哪个最低","从哪一秒开始掉人"],why:"数据是内容问题的放大镜，复盘要精确到秒。"},
+    {title:"这条内容有没有后续价值？",checklist:["能否做成系列","能否更新第二季","粉丝会不会催更"],why:"爆款的最大价值是能否复制和系列化。"},
+    {title:"变现路径清晰吗？",checklist:["这家店能接探店合作吗","能否挂团购券","是否适合引流私域"],why:"做号最终要变现，每条内容都应考虑商业可能。"},
+    {title:"人设是否一致？",checklist:["语气/风格/价值观是否稳定","这条内容和以往是否割裂","粉丝能不能认出是你"],why:"人设一致性决定粉丝粘性和账号溢价。"},
+    {title:"有没有借鉴爆款但保持原创？",checklist:["是否参考了近期爆款结构","是否加入了自己的本地视角","是否避免抄袭"],why:"学习爆款结构，但必须本地化+原创化。"},
+    {title:"设备/收音/收音环境是否达标？",checklist:["人声是否清晰","环境音是否过吵","是否用了麦克风/稳定器"],why:"基础设备影响观看体验，口播类尤其重要。"},
+    {title:"开头是否快速进入主题？",checklist:["是否有冗长自我介绍","是否3秒内出现店/菜/冲突","是否直接上钩子"],why:"抖音用户耐心极低，拖沓开头直接划走。"},
+    {title:"情绪是否到位？",checklist:["是否有惊喜/好奇/共鸣/愤怒等情绪","情绪峰值出现在哪里","结尾是否有情绪落点"],why:"情绪是内容传播的核心燃料。"},
+    {title:"有没有制造『信息差』？",checklist:["用户看完是否获得了新知识","是否有『原来如此』的感觉","是否提供了独特视角"],why:"信息差内容收藏率和转发率都高。"},
+    {title:"是否过度广告？",checklist:["是否像广告片","是否有真实缺点","粉丝会不会反感"],why:"过度广告掉粉限流，真实测评反而涨粉。"},
+    {title:"结尾是否有记忆点？",checklist:["结尾是否有金句/口头禅","是否预告下期","是否有固定结束动作"],why:"结尾决定关注率和追更率。"},
+    {title:"是否测试了不同发布时间？",checklist:["同一类型内容在不同时间段发过吗","哪个时间段数据最好","是否形成了固定更新节奏"],why:"找到最佳发布时间是数据优化的基础。"},
+    {title:"是否利用了『本地人』身份？",checklist:["是否突出桂林本地视角","是否有本地人熟悉的梗","是否让外地人觉得值得信任"],why:"本地身份是桂林探店号的核心壁垒。"},
+    {title:"是否关注了同城竞品？",checklist:["近期同城爆款有哪些","他们的选题/形式能否借鉴","能否做出差异化"],why:"竞品是最好的老师，也能帮你找到蓝海选题。"},
+    {title:"是否做了A/B测试？",checklist:["同一选题是否换过封面/标题/开头","哪个版本数据更好","是否总结出规律"],why:"A/B测试是快速迭代的关键。"},
+    {title:"这条内容是否值得投流？",checklist:["自然流数据是否达标","投产比是否算得过来","是否值得用Dou+/薯条加热"],why:"不是所有视频都值得投，要学会用数据判断。"}
+  ],
+  title:[
+    {title:"数字+结果型",example:"桂林这5家米粉店，本地人吃了20年",why:"数字降低阅读成本，结果型承诺吸引点击。"},
+    {title:"反常识/避雷型",example:"来桂林千万别先吃这家，吃完别的都不香了",why:"反常识制造冲突，激发好奇点击。"},
+    {title:"本地人背书型",example:"桂林土著私藏！这3家店外地人根本找不到",why:"本地人身份建立信任，『找不到』制造信息差。"},
+    {title:"挑战/极限型",example:"挑战100元在桂林吃一天，结果居然……",why:"悬念留到正文，数字预算引发完播。"},
+    {title:"情绪共鸣型",example:"在桂林，我找到了童年味道",why:"情绪钩子易引发共鸣和转发。"},
+    {title:"提问互动型",example:"桂林人，你心中第一的米粉店是哪家？",why:"提问直接引导评论，互动率高。"},
+    {title:"稀缺/限时型",example:"桂林这家店每天只卖3小时，排队排到路口",why:"稀缺性制造紧迫感，促点击。"},
+    {title:"对比冲突型",example:"网红店vs巷子老店，桂林米粉到底哪家强？",why:"对比制造站队和讨论。"},
+    {title:"第一人称真实型",example:"我在桂林连吃7天，终于找到最正宗的油茶",why:"真实经历增加可信度，数字强调付出。"},
+    {title:"清单/合集型",example:"桂林秀峰区必吃榜Top8，收藏这一篇就够了",why:"合集型实用，收藏率高。"},
+    {title:"痛点解决型",example:"来桂林旅游不知道吃什么？本地人给你安排好了",why:"直接解决游客痛点，搜索流量大。"},
+    {title:"猎奇/反差型",example:"桂林最便宜的米其林？这家小店人均15",why:"反差制造好奇，『米其林』是高势能词。"},
+    {title:"人设标签型",example:"桂林吃货小分队｜今天带你吃巷子里那家",why:"人设+地点，稳定输出本地信任。"},
+    {title:"时间节点型",example:"桂林周末去哪吃？这份攻略请收好",why:"踩中周末流量高峰，实用性强。"},
+    {title:"直呼目标人群型",example:"学生党看过来！桂林这5家店人均不到20",why:"精准人群标签提高点击转化。"},
+    {title:"制造悬念型",example:"桂林这家店的老板，比菜还有故事",why:"人物故事悬念，吸引看完。"},
+    {title:"场景代入型",example:"下班后来桂林这条街，我能从头吃到尾",why:"场景代入引发共鸣，适合本地用户。"},
+    {title:"权威/测评型",example:"桂林螺蛳粉横向测评，这3家我服了",why:"测评建立专业感，『服了』增强情绪。"},
+    {title:"蹭热点型",example:"跟着《XXX》打卡桂林，这家小店居然火了",why:"借势热门影视/事件，短期流量爆发。"},
+    {title:"教程/攻略型",example:"桂林探店怎么拍？3个技巧让流量翻倍",why:"教程型收藏率高，适合建立专家人设。"},
+    {title:"恐惧/避坑型",example:"桂林旅游这些店千万别进，踩过坑才敢说",why:"避坑型点击率高，适合小红书。"},
+    {title:"感恩/回馈型",example:"感谢粉丝推荐！桂林这家店真的没白来",why:"增强粉丝参与感和信任。"},
+    {title:"地域梗型",example:"桂林人出来解释一下，你们早餐真的这么辣？",why:"地域梗引发本地人和外地人互动。"},
+    {title:"轻奢/体验型",example:"桂林人均300的私房菜，值不值得去？",why:"高客单价制造猎奇，适合Dou+。"},
+    {title:"儿童/亲子型",example:"桂林适合带娃去的餐厅，这4家环境好还不贵",why:"精准宝妈人群，小红书需求稳定。"},
+    {title:"夜宵治愈型",example:"桂林深夜12点，这碗粉治愈了我",why:"情绪+场景，深夜流量池稳定。"},
+    {title:"挑战失败型",example:"挑战桂林最辣米粉，我输了",why:"失败叙事真实有趣，完播率高。"},
+    {title:"揭秘型",example:"桂林这家网红店，后厨居然是这样的",why:"揭秘满足窥探欲，点击率好。"},
+    {title:"情怀故事型",example:"桂林这家30年老店，养大了三代人",why:"情怀故事易引发转发和评论。"},
+    {title:"行动号召型",example:"下周去哪家？评论区你们说了算！",why:"强互动引导，评论区热度高。"}
+  ]
+};
+
+/* ---------- 默认模块配置 ---------- */
+const DEFAULT_PAGES = [
+  {id:"plan",    label:"每日计划",     icon:"📅", type:"plan",    builtin:true},
+  {id:"week",    label:"每周计划",     icon:"🗓️", type:"week",    builtin:true},
+  {id:"blogger", label:"每日博主推荐", icon:"⭐", type:"blogger", builtin:true},
+  {id:"idea",    label:"选题灵感",     icon:"💡", type:"daily",   builtin:true, dailyType:"idea"},
+  {id:"hot",     label:"爆款热点",     icon:"🔥", type:"daily",   builtin:true, dailyType:"hot"},
+  {id:"review",  label:"内容复盘",     icon:"📝", type:"daily",   builtin:true, dailyType:"review"},
+  {id:"title",   label:"爆款标题",     icon:"🏷️", type:"daily",   builtin:true, dailyType:"title"},
+  {id:"memo",    label:"备忘录",       icon:"📒", type:"list",    builtin:true},
+  {id:"sport",   label:"运动健身",     icon:"🏸", type:"list",    builtin:true},
+  {id:"social",  label:"社交",         icon:"💬", type:"list",    builtin:true},
+  {id:"eat",     label:"想吃",         icon:"🍜", type:"list",    builtin:true},
+  {id:"go",      label:"想去",         icon:"📍", type:"list",    builtin:true},
+  {id:"watch",   label:"想看",         icon:"🎬", type:"list",    builtin:true}
+];
+const PAGE_META = {}; // id -> page object
+DEFAULT_PAGES.forEach(p=>PAGE_META[p.id]=p);
+
+/* ---------- 状态 ---------- */
+let state = null;
+let syncCfg = null;
+let currentPage = "plan";
+let bloggerBrowseDate = todayStr(); // 博主推荐浏览日期
+let dailyBrowseDate = todayStr();   // 每日灵感浏览日期
+let saveTimer = null;
+let syncTimer = null;
+let syncStatus = "off"; // off | on | syncing | error
+
+/* ---------- 工具 ---------- */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function $(id){return document.getElementById(id)}
+
+/* ---------- 存储 ---------- */
+function defaultState(){
+  const s={pages:DEFAULT_PAGES.map(p=>({...p,visible:true})), data:{}};
+  // 初始化各 list 页空数组
+  DEFAULT_PAGES.forEach(p=>{ if(p.type==="list") s.data[p.id]=[]; });
+  s.data.plan=[];          // {id,text,platform,done,doneDate,createdDate}
+  s.data.blogger={notes:{}};// {notes:{dateStr:string}}
+  s.data.week={tasks:[]};  // {id,dayIndex(0-6),text,done}
+  // 每日灵感模块：保存用户收藏和笔记
+  ["idea","hot","review","title"].forEach(k=>{ s.data["daily_"+k]={saved:[], notes:{}}; });
+  s.updatedAt=Date.now();
+  return s;
+}
+
+const DAILY_IDS=["idea","hot","review","title"];
+const BUILTIN_IDS=DEFAULT_PAGES.map(p=>p.id);
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){ state=JSON.parse(raw); }
+  }catch(e){ console.warn("load fail",e); }
+  if(!state||!state.pages){ state=defaultState(); }
+  if(!state.data) state.data={};
+  if(!state.data.plan) state.data.plan=[];
+  if(!state.data.blogger) state.data.blogger={notes:{}};
+  if(!state.data.week) state.data.week={tasks:[]};
+  DAILY_IDS.forEach(k=>{ if(!state.data["daily_"+k]) state.data["daily_"+k]={saved:[], notes:{}}; });
+  DEFAULT_PAGES.forEach(p=>{ if(p.type==="list" && !state.data[p.id]) state.data[p.id]=[]; });
+
+  // 迁移：把 idea/hot/review/title 从 list 类型改为 daily（若旧版用 list 存过）
+  state.pages.forEach(p=>{
+    if(DAILY_IDS.includes(p.id) && p.type==="list"){ p.type="daily"; p.dailyType=p.id; p.builtin=true; }
+  });
+  // 补齐新增默认模块（如 week）
+  DEFAULT_PAGES.forEach(def=>{
+    if(!state.pages.find(p=>p.id===def.id)){
+      state.pages.splice(def.orderIndex!=null?def.orderIndex:state.pages.length,0,{...def,visible:true});
+    }
+  });
+  // 按 DEFAULT_PAGES 顺序重排内置模块
+  const custom=state.pages.filter(p=>!p.builtin);
+  const built=[];
+  DEFAULT_PAGES.forEach(def=>{
+    const p=state.pages.find(x=>x.builtin && x.id===def.id);
+    if(p) built.push({...p, label:def.label, icon:def.icon, type:def.type, dailyType:def.dailyType});
+  });
+  state.pages=built.concat(custom);
+}
+function saveState(opts){
+  opts=opts||{};
+  state.updatedAt=Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){ console.warn(e); }
+  showSaveToast();
+  if(opts&&opts.silent) return;
+  scheduleSync();
+}
+function showSaveToast(){
+  const t=$("saveToast"); if(!t)return;
+  t.classList.add("show");
+  clearTimeout(t._tm);
+  t._tm=setTimeout(()=>t.classList.remove("show"),1100);
+}
+
+/* ---------- 云端配置 ---------- */
+/* ⚠️ 内置自动同步凭据（饼饼专属）。token 已写入本文件，请勿将本文件分享到公开/不可信环境。
+   用完建议去 GitHub 撤销此 token 并重置。源码中 token 仍可还原，属有意设计以便自动同步。 */
+const GH_TOKEN="";
+const BUILTIN_SYNC = {
+  enabled:false, mode:"github",
+  repo:"bingbing99827/bingbing-workbench",
+  branch:"main", token:"", path:"", jsonUrl:"", docId:"1"
+};
+const LS_SYNC_OFF = 'bingbing_workstation_syncoff_v1'; // 用户主动断开标记
+function loadSync(){
+  try{ const r=localStorage.getItem(LS_SYNC); if(r) syncCfg=JSON.parse(r);}catch(e){}
+  if(!syncCfg){
+    let off=false; try{ off=!!localStorage.getItem(LS_SYNC_OFF); }catch(e){}
+    syncCfg = off
+      ? {enabled:false,mode:"github",repo:"",token:"",branch:"main",path:"",jsonUrl:"",docId:"1"}
+      : Object.assign({}, BUILTIN_SYNC);
+    saveSyncCfg();
+    return;
+  }
+
+}
+function saveSyncCfg(){ try{ localStorage.setItem(LS_SYNC,JSON.stringify(syncCfg)); }catch(e){} }
+
+/* =========================================================
+   云端同步引擎（纯 fetch，无 SDK）
+   ========================================================= */
+/* GitHub / JSON 同步辅助函数 */
+function ghFilePath(){
+  const id=(syncCfg.docId||"1");
+  return (syncCfg.path && syncCfg.path.trim()) ? syncCfg.path.trim() : ("workbench-"+id+".json");
+}
+function utf8ToBase64(str){
+  const bytes=new TextEncoder().encode(str);
+  let bin="";
+  for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function base64ToUtf8(b64){
+  const bin=atob(String(b64).replace(/\s/g,""));
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+async function pushRemote(payload){
+  if(!syncCfg.enabled) return false;
+  if(syncCfg.mode==="github"){
+    if(!syncCfg.repo||!syncCfg.token) throw new Error("请填写仓库与 Token");
+    const url=`https://api.github.com/repos/${syncCfg.repo}/contents/${encodeURIComponent(ghFilePath())}`;
+    const head={"Authorization":"Bearer "+syncCfg.token,"Accept":"application/vnd.github+json","Content-Type":"application/json","X-GitHub-Api-Version":"2022-11-28"};
+    let sha=null;
+    try{ const g=await fetch(url,{headers:{"Authorization":head["Authorization"],"Accept":head["Accept"]}}); if(g.ok){ const j=await g.json(); sha=j.sha; } }catch(e){}
+    const body={message:"workbench sync @ "+new Date().toISOString(), content:utf8ToBase64(JSON.stringify(payload)), branch:syncCfg.branch||"main"};
+    if(sha) body.sha=sha;
+    const res=await fetch(url,{method:"PUT",headers:head,body:JSON.stringify(body)});
+    if(!res.ok){ let m=""; try{ m=(await res.json()).message||""; }catch(e){} throw new Error("HTTP "+res.status+" "+(m||"")); }
+    return true;
+  }else{
+    if(!syncCfg.jsonUrl) throw new Error("请填写 API 地址");
+    const res=await fetch(syncCfg.jsonUrl,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    return true;
+  }
+}
+async function pullRemote(){
+  if(!syncCfg.enabled) return null;
+  if(syncCfg.mode==="github"){
+    if(!syncCfg.repo||!syncCfg.token) throw new Error("请填写仓库与 Token");
+    const url=`https://api.github.com/repos/${syncCfg.repo}/contents/${encodeURIComponent(ghFilePath())}?ref=${encodeURIComponent(syncCfg.branch||"main")}`;
+    const head={"Authorization":"Bearer "+syncCfg.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+    const res=await fetch(url,{headers:head});
+    if(res.status===404) return null;
+    if(!res.ok){ let m=""; try{ m=(await res.json()).message||""; }catch(e){} throw new Error("HTTP "+res.status+" "+(m||"")); }
+    const j=await res.json();
+    const text=base64ToUtf8(j.content);
+    return JSON.parse(text);
+  }else{
+    if(!syncCfg.jsonUrl) throw new Error("请填写 API 地址");
+    const res=await fetch(syncCfg.jsonUrl);
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    return await res.json();
+  }
+}
+function setSyncStatus(s,msg){
+  syncStatus=s;
+  const chip=$("syncChip"),dot=$("chipDot"),txt=$("chipText");
+  const fdot=$("footDot"),ftext=$("footSyncText");
+  const map={on:"on",syncing:"sync",error:"off",restricted:"sync",off:"off"};
+  chip.className="sync-chip "+map[s];
+  dot.className="sync-dot "+(s==="on"?"dot-on":s==="syncing"||s==="restricted"?"dot-sync":"dot-off");
+  fdot.className="sync-dot "+(s==="on"?"dot-on":s==="syncing"||s==="restricted"?"dot-sync":"dot-off");
+  let label = s==="on"?"已连接":s==="syncing"?"同步中":s==="error"?"同步失败":s==="restricted"?"环境受限":"未连接";
+  if(s==="on"&&msg) label="已连接·"+msg;
+  txt.textContent=label;
+  ftext.textContent= s==="on"?"云端已连接":s==="syncing"?"同步中…":s==="restricted"?"当前环境无法联网":"云端未连接";
+}
+function scheduleSync(){
+  if(!syncCfg.enabled) return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(doSync,1500);
+}
+async function doSync(){
+  if(!syncCfg.enabled) return;
+  setSyncStatus("syncing");
+  try{
+    const remote=await pullRemote();
+    if(remote && remote.updatedAt && remote.updatedAt>state.updatedAt){
+      // 远端更新 -> 合并（简单 LWW：取较新整体）
+      state=remote; saveState({silent:true});
+      renderNav(); renderCurrent();
+    }
+    await pushRemote(state);
+    const t=new Date();
+    setSyncStatus("on", t.getHours()+":"+String(t.getMinutes()).padStart(2,"0"));
+  }catch(e){
+    console.warn("sync error",e);
+    const isNet = (e.message||"").toLowerCase().includes("failed to fetch") || (e.message||"").includes("NetworkError");
+    if(isNet){ setSyncStatus("restricted"); }
+    else { setSyncStatus("error"); setTimeout(()=>setSyncStatus("off"),2500); }
+  }
+}
+
+/* =========================================================
+   侧边栏 / 导航
+   ========================================================= */
+function visiblePages(){ return state.pages.filter(p=>p.visible); }
+function renderNav(){
+  const nav=$("navList"); nav.innerHTML="";
+  visiblePages().forEach(p=>{
+    const div=document.createElement("div");
+    div.className="nav-item"+(p.id===currentPage?" active":"");
+    div.onclick=()=>switchPage(p.id);
+    let badge="";
+    if(p.type==="plan"){
+      const todo=state.data.plan.filter(t=>!t.done).length;
+      if(todo>0) badge=`<span class="ni-badge">${todo}</span>`;
+    }else if(p.type==="list"){
+      const n=state.data[p.id]?state.data[p.id].length:0;
+      if(n>0) badge=`<span class="ni-badge">${n}</span>`;
+    }else if(p.type==="daily"){
+      const n=state.data["daily_"+p.dailyType]?state.data["daily_"+p.dailyType].saved.length:0;
+      if(n>0) badge=`<span class="ni-badge">${n}</span>`;
+    }else if(p.type==="week"){
+      const todo=state.data.week.tasks.filter(t=>!t.done).length;
+      if(todo>0) badge=`<span class="ni-badge">${todo}</span>`;
+    }
+    div.innerHTML=`<span class="ni-icon">${p.icon}</span><span>${esc(p.label)}</span>${badge}`;
+    nav.appendChild(div);
+  });
+}
+function switchPage(id){
+  currentPage=id;
+  const p=state.pages.find(x=>x.id===id);
+  if(p){ $("topTitle").textContent=p.label; }
+  $("topSub").textContent=subText(id);
+  renderNav();
+  renderCurrent();
+  closeSidebar();
+  try{ localStorage.setItem("bb_lastpage",id); }catch(e){}
+}
+function subText(id){
+  const m={
+    plan:"今天也要认真探店呀", week:"把一周目标拆到每一天",
+    blogger:"每天学一条爆款逻辑",
+    idea:"每日一个桂林探店选题", hot:"每日一个可追热点", review:"每日一条复盘清单", title:"每日一个好标题公式",
+    memo:"随手记", sport:"动起来就不孤单",
+    social:"人脉要经营", eat:"吃货清单", go:"想去的地方", watch:"想看的片单"
+  };
+  return m[id]||"";
+}
+function renderCurrent(){
+  const c=$("content");
+  const p=state.pages.find(x=>x.id===currentPage);
+  if(!p){ c.innerHTML='<div class="empty">请选择一个模块</div>'; return; }
+  if(p.type==="plan") renderPlan(c);
+  else if(p.type==="week") renderWeek(c);
+  else if(p.type==="blogger") renderBlogger(c);
+  else if(p.type==="daily") renderDaily(c,p);
+  else if(p.type==="list") renderList(c,p);
+  else renderNotes(c,p);
+  bindListInputs(c);
+}
+
+/* =========================================================
+   每日计划（历史按日期折叠）
+   ========================================================= */
+function renderPlan(c){
+  const tasks=state.data.plan||[];
+  const todo=tasks.filter(t=>!t.done);
+  const done=tasks.filter(t=>t.done);
+  const total=tasks.length, pct= total? Math.round(done.length/total*100):0;
+  let h=`<div class="card">
+    <div class="card-title">📅 今日计划 <span class="ct-sub">自动保存 · 关闭不丢</span></div>
+    <div class="prog-wrap">
+      <div class="prog-ring" style="--p:${pct}"><i>${pct}%</i></div>
+      <div class="prog-meta"><b>${done.length}/${total}</b> <span>已完成 · 坚持打卡!</span></div>
+    </div>
+    <div class="input-row" style="margin-top:14px">
+      <input id="planInput" placeholder="添加一条计划，回车确认…" onkeydown="if(event.key==='Enter')addPlan()">
+      <button class="btn btn-primary" onclick="addPlan()">添加</button>
+    </div>
+    <div id="planTodo"></div>
+  </div>`;
+  // 待办
+  if(todo.length){
+    h+=`<div class="sec-label">📌 今日待办（${todo.length}）</div><div class="card" style="padding:6px 14px">`;
+    todo.forEach(t=>{ h+=planItem(t); });
+    h+=`</div>`;
+  }else{
+    h+=`<div class="card"><div class="empty">🎉 今日待办已清空，去探店吧！</div></div>`;
+  }
+  // 历史完成（按日期分组折叠）
+  if(done.length){
+    const byDate={};
+    done.forEach(t=>{ const d=t.doneDate||"未知日期"; (byDate[d]=byDate[d]||[]).push(t); });
+    const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+    h+=`<div class="sec-label">🗂️ 历史完成（点击展开）</div>`;
+    dates.forEach((d,i)=>{
+      const open=i===0?"open":"";
+      h+=`<div class="hist-day">
+        <div class="hist-head ${open}" onclick="toggleHist(this)">
+          <span class="hd-date">${esc(d)}</span>
+          <span class="hd-count">${byDate[d].length} 项</span>
+          <span class="hd-arrow">▼</span>
+        </div>
+        <div class="hist-body ${open}" style="padding:0 15px 8px">`;
+      byDate[d].forEach(t=>{ h+=planItem(t,true); });
+      h+=`</div></div>`;
+    });
+  }
+  c.innerHTML=h;
+  bindPlan(c);
+}
+function planItem(t,doneMode){
+  const done=t.done?"done":"";
+  const chk=t.done?"✓":"";
+  const pf=t.platform?`<span style="font-size:11px;color:var(--sub);margin-left:6px">·${esc(t.platform)}</span>`:"";
+  return `<div class="list-item" data-id="${t.id}">
+    <div class="chk ${done}" onclick="togglePlan('${t.id}')">${chk}</div>
+    <div class="li-text ${done}" onclick="editPlan('${t.id}',this)">${esc(t.text)}${pf}</div>
+    <div class="li-del" onclick="delPlan('${t.id}')">删除</div>
+  </div>`;
+}
+function bindPlan(c){
+  // 平台快捷标记可在编辑时加，这里仅绑定已有
+}
+function addPlan(){
+  const inp=$("planInput"); if(!inp)return;
+  const v=inp.value.trim(); if(!v)return;
+  state.data.plan.push({id:uid(),text:v,platform:"",done:false,doneDate:null,createdDate:todayStr()});
+  inp.value=""; saveState(); renderPlan($("content")); renderNav();
+}
+function togglePlan(id){
+  const t=state.data.plan.find(x=>x.id===id); if(!t)return;
+  t.done=!t.done; t.doneDate=t.done?todayStr():null;
+  saveState(); renderPlan($("content")); renderNav();
+}
+function delPlan(id){
+  state.data.plan=state.data.plan.filter(x=>x.id!==id);
+  saveState(); renderPlan($("content")); renderNav();
+}
+function editPlan(id,el){
+  const t=state.data.plan.find(x=>x.id===id); if(!t)return;
+  const nv=prompt("编辑计划：",t.text); if(nv===null)return;
+  const v=nv.trim(); if(!v){ return; }
+  t.text=v;
+  // 可选：在文本后用 “|平台” 标记平台
+  const m=v.match(/\|\s*([^\|]+)$/);
+  if(m){ t.text=v.replace(/\|\s*([^\|]+)$/,"").trim(); t.platform=m[1].trim(); }
+  saveState(); renderPlan($("content"));
+}
+function toggleHist(head){
+  head.classList.toggle("open");
+  head.nextElementSibling.classList.toggle("open");
+}
+
+/* =========================================================
+   通用清单页
+   ========================================================= */
+function renderList(c,p){
+  const items=state.data[p.id]||[];
+  const done=items.filter(x=>x.done).length;
+  const pct=items.length?Math.round(done/items.length*100):0;
+  let h=`<div class="card">
+    <div class="card-title">${p.icon} ${esc(p.label)} <span class="ct-sub">${items.length} 条 · 自动保存</span></div>
+    <div class="bar-meta">完成进度：${done}/${items.length} · ${pct}%</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+    <div class="input-row">
+      <input id="listInput" placeholder="添加一条，回车确认…" onkeydown="if(event.key==='Enter')addListItem('${p.id}')">
+      <button class="btn btn-primary" onclick="addListItem('${p.id}')">添加</button>
+    </div>
+    <div id="listBox"></div>
+  </div>`;
+  if(items.length){
+    h+=`<div class="card" style="padding:6px 14px">`;
+    items.forEach(it=>{
+      const done=it.done?"done":""; const chk=it.done?"✓":"";
+      h+=`<div class="list-item" data-id="${it.id}">
+        <div class="chk ${done}" onclick="toggleListItem('${p.id}','${it.id}')">${chk}</div>
+        <div class="li-text ${done}" onclick="editListItem('${p.id}','${it.id}',this)">${esc(it.text)}</div>
+        <div class="li-del" onclick="delListItem('${p.id}','${it.id}')">删除</div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }else{
+    h+=`<div class="card"><div class="empty">还没有内容，添加第一条吧～</div></div>`;
+  }
+  c.innerHTML=h;
+}
+function addListItem(pid){
+  const inp=$("listInput"); if(!inp)return;
+  const v=inp.value.trim(); if(!v)return;
+  if(!state.data[pid]) state.data[pid]=[];
+  state.data[pid].unshift({id:uid(),text:v,done:false});
+  inp.value=""; saveState(); renderList($("content"),state.pages.find(x=>x.id===pid)); renderNav();
+}
+function toggleListItem(pid,id){
+  const arr=state.data[pid]; if(!arr)return;
+  const it=arr.find(x=>x.id===id); if(!it)return;
+  it.done=!it.done; saveState(); renderList($("content"),state.pages.find(x=>x.id===pid)); renderNav();
+}
+function delListItem(pid,id){
+  state.data[pid]=state.data[pid].filter(x=>x.id!==id);
+  saveState(); renderList($("content"),state.pages.find(x=>x.id===pid)); renderNav();
+}
+function editListItem(pid,id,el){
+  const arr=state.data[pid]; if(!arr)return;
+  const it=arr.find(x=>x.id===id); if(!it)return;
+  const nv=prompt("编辑内容：",it.text); if(nv===null)return;
+  const v=nv.trim(); if(!v)return;
+  it.text=v; saveState(); renderList($("content"),state.pages.find(x=>x.id===pid));
+}
+
+/* =========================================================
+   自由笔记页（自定义模块）
+   ========================================================= */
+function renderNotes(c,p){
+  const val=state.data[p.id]||"";
+  c.innerHTML=`<div class="card">
+    <div class="card-title">${p.icon} ${esc(p.label)} <span class="ct-sub">自动保存</span></div>
+    <textarea id="notesArea" style="width:100%;min-height:300px;border:1px solid var(--line);border-radius:12px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;outline:none;background:#FAFBFC" placeholder="随手写点什么…">${esc(val)}</textarea>
+  </div>`;
+  const ta=$("notesArea");
+  ta.addEventListener("input",()=>{ state.data[p.id]=ta.value; saveState({silent:true}); scheduleSync(); });
+}
+function bindListInputs(c){ /* placeholder for future */ }
+
+/* =========================================================
+   每日灵感模块（选题/热点/复盘/标题，按日自动轮换）
+   ========================================================= */
+function dailyItemForDate(type,dateStr){
+  const idx=dayIndex(dateStr);
+  const arr=DAILY_DATA[type]||[];
+  const n=arr.length;
+  return arr[((idx%n)+n)%n];
+}
+function renderDaily(c,p){
+  const type=p.dailyType;
+  const item=dailyItemForDate(type,dailyBrowseDate);
+  const isToday=dailyBrowseDate===todayStr();
+  const dataKey="daily_"+type;
+  const saved=state.data[dataKey].saved||[];
+  const note=(state.data[dataKey].notes&&state.data[dataKey].notes[dailyBrowseDate])||"";
+  let title=esc(item.title), body="", extra="";
+  if(type==="idea"){
+    const tags=(item.tags||[]).map(t=>`<span class="daily-tag">${esc(t)}</span>`).join("");
+    body=`<div class="daily-tags">${tags}</div><div class="daily-body">${esc(item.desc)}</div>`;
+    extra=`<div class="daily-reason"><b>💡 为什么这个选题值得做？</b><br>${esc(item.why)}</div>`;
+  }else if(type==="hot"){
+    body=`<div class="daily-body">${esc(item.desc)}</div>`;
+    extra=`<div class="daily-reason"><b>🔥 为什么这个热点能火？</b><br>${esc(item.why)}</div>`;
+  }else if(type==="review"){
+    const chk=(item.checklist||[]).map((t,i)=>`<div class="list-item" style="border-bottom:none;padding:6px 0"><div class="chk" style="cursor:default"></div><div class="li-text">${esc(t)}</div></div>`).join("");
+    body=`<div class="daily-body"><b>今日复盘主题：</b>${esc(item.title)}</div><div class="card" style="padding:4px 12px;margin:10px 0">${chk}</div>`;
+    extra=`<div class="daily-reason"><b>📝 为什么重点复盘它？</b><br>${esc(item.why)}</div>`;
+  }else if(type==="title"){
+    body=`<div class="daily-body"><b>公式：</b>${esc(item.title)}</div><div class="bc-video">📝 示例：<b>${esc(item.example)}</b></div>`;
+    extra=`<div class="daily-reason"><b>🏷️ 为什么这个标题有效？</b><br>${esc(item.why)}</div>`;
+  }
+  let h=`<div class="daynav">
+    <button onclick="shiftDaily(-1)">‹</button>
+    <div class="cur">${isToday?"📌 今日灵感 · "+dailyBrowseDate:"📅 "+dailyBrowseDate}</div>
+    <button onclick="shiftDaily(1)">›</button>
+  </div>`;
+  h+=`<div class="card daily-card">
+    <div class="card-title">${p.icon} ${esc(p.label)} <span class="ct-sub">每日 0 点自动更新</span></div>
+    <div style="font-size:18px;font-weight:800;margin:6px 0 10px">${title}</div>
+    ${body}
+    ${extra}
+    <div style="display:flex;gap:9px;margin-top:14px">
+      <button class="btn btn-primary" style="flex:1" onclick="addDailySave('${type}')">⭐ 加入我的灵感库</button>
+      <button class="btn btn-ghost" onclick="copyDaily('${type}')">📋 复制内容</button>
+    </div>
+    <textarea class="bc-note" id="dailyNote" placeholder="我的笔记：这条怎么用到我的内容里？（自动保存）">${esc(note)}</textarea>
+  </div>`;
+  // 我的收藏
+  if(saved.length){
+    h+=`<div class="card"><div class="card-title">⭐ 我的灵感库 <span class="ct-sub">${saved.length} 条</span></div>`;
+    saved.slice().reverse().forEach((s,i)=>{
+      h+=`<div class="list-item"><div class="li-text" style="font-size:13.5px">${esc(s.text)}<span style="color:var(--sub);margin-left:6px">·${s.date}</span></div><div class="li-del" onclick="delDailySave('${type}',${saved.length-1-i})">删除</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div class="card"><div class="hint" style="margin:0">💡 这是为你（桂林探店博主，抖音+小红书方向）定制的<b>每日灵感库</b>，每天自动轮换。可收藏、可记笔记、可复制。0 点自动刷新今日内容。</div></div>`;
+  c.innerHTML=h;
+  const ta=$("dailyNote");
+  ta.addEventListener("input",()=>{
+    if(!state.data[dataKey].notes) state.data[dataKey].notes={};
+    state.data[dataKey].notes[dailyBrowseDate]=ta.value; saveState({silent:true}); scheduleSync();
+  });
+}
+function shiftDaily(dir){
+  const d=new Date(dailyBrowseDate+"T00:00:00");
+  d.setDate(d.getDate()+dir);
+  dailyBrowseDate=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  renderDaily($("content"),state.pages.find(x=>x.id===currentPage));
+}
+function addDailySave(type){
+  const dataKey="daily_"+type;
+  const item=dailyItemForDate(type,dailyBrowseDate);
+  if(!state.data[dataKey].saved) state.data[dataKey].saved=[];
+  state.data[dataKey].saved.push({id:uid(),text:item.title,date:dailyBrowseDate});
+  saveState(); renderDaily($("content"),state.pages.find(x=>x.id===currentPage&&x.type==="daily"));
+}
+function delDailySave(type,idx){
+  const dataKey="daily_"+type;
+  state.data[dataKey].saved.splice(idx,1);
+  saveState(); renderDaily($("content"),state.pages.find(x=>x.id===currentPage&&x.type==="daily"));
+}
+function copyDaily(type){
+  const item=dailyItemForDate(type,dailyBrowseDate);
+  let text=item.title+"\n";
+  if(type==="idea") text+=item.desc+"\n"+item.why;
+  else if(type==="hot") text+=item.desc+"\n"+item.why;
+  else if(type==="review") text+=(item.checklist||[]).join("\n")+"\n"+item.why;
+  else if(type==="title") text+=item.example+"\n"+item.why;
+  navigator.clipboard.writeText(text).then(()=>{
+    const t=$("saveToast"); t.textContent="📋 已复制到剪贴板"; t.classList.add("show");
+    clearTimeout(t._tm); t._tm=setTimeout(()=>{t.classList.remove("show"); t.textContent="✅ 已自动保存";},1500);
+  }).catch(()=>{});
+}
+
+/* =========================================================
+   每周计划
+   ========================================================= */
+const WEEK_DAYS=["周一","周二","周三","周四","周五","周六","周日"];
+function weekDateStr(dayIndex){
+  // 返回本周对应日期的 YYYY-MM-DD，周一为第0天
+  const now=new Date();
+  const day=now.getDay(); // 0=周日,1=周一
+  const mon=now.getTime()-(day===0?6:day-1)*86400000;
+  const d=new Date(mon+dayIndex*86400000);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function renderWeek(c){
+  const tasks=state.data.week.tasks||[];
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  const pct=total?Math.round(done/total*100):0;
+  let h=`<div class="card">
+    <div class="card-title">🗓️ 每周计划 <span class="ct-sub">完成 ${done}/${total} · ${pct}%</span></div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+    <div class="hint" style="margin:0">把本周目标拆到每天，完成一项勾一项。每周一自动切换新周。</div>
+  </div>`;
+  h+=`<div class="week-grid">`;
+  const today=weekDateStr(new Date().getDay()===0?6:new Date().getDay()-1);
+  WEEK_DAYS.forEach((name,i)=>{
+    const dayTasks=tasks.filter(t=>t.dayIndex===i);
+    const dayDone=dayTasks.filter(t=>t.done).length;
+    const dayDate=weekDateStr(i);
+    const isToday=dayDate===todayStr();
+    h+=`<div class="week-day ${isToday?"today":""}">
+      <div class="wd-head"><span class="wd-dayname">${name}</span><span style="font-size:12px;color:var(--sub)">${dayDone}/${dayTasks.length}</span></div>
+      <div class="input-row"><input id="weekInp_${i}" placeholder="添加任务…" onkeydown="if(event.key==='Enter')addWeekTask(${i})"></div>
+      <div style="flex:1">`;
+    dayTasks.forEach(t=>{
+      const done=t.done?"done":""; const chk=t.done?"✓":"";
+      h+=`<div class="list-item"><div class="chk ${done}" onclick="toggleWeekTask('${t.id}')">${chk}</div><div class="li-text ${done}" onclick="editWeekTask('${t.id}',this)">${esc(t.text)}</div><div class="li-del" onclick="delWeekTask('${t.id}')">删除</div></div>`;
+    });
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  c.innerHTML=h;
+}
+function addWeekTask(dayIndex){
+  const inp=$("weekInp_"+dayIndex); if(!inp)return;
+  const v=inp.value.trim(); if(!v)return;
+  state.data.week.tasks.push({id:uid(),dayIndex,text:v,done:false});
+  inp.value=""; saveState(); renderWeek($("content")); renderNav();
+}
+function toggleWeekTask(id){
+  const t=state.data.week.tasks.find(x=>x.id===id); if(!t)return;
+  t.done=!t.done; saveState(); renderWeek($("content")); renderNav();
+}
+function delWeekTask(id){
+  state.data.week.tasks=state.data.week.tasks.filter(x=>x.id!==id);
+  saveState(); renderWeek($("content")); renderNav();
+}
+function editWeekTask(id,el){
+  const t=state.data.week.tasks.find(x=>x.id===id); if(!t)return;
+  const nv=prompt("编辑任务：",t.text); if(nv===null)return;
+  const v=nv.trim(); if(!v)return;
+  t.text=v; saveState(); renderWeek($("content"));
+}
+
+/* =========================================================
+   每日博主推荐
+   ========================================================= */
+function dayIndex(dateStr){
+  const d=new Date(dateStr+"T00:00:00");
+  return Math.floor((d.getTime()-Date.UTC(2026,0,1))/86400000);
+}
+function bloggerForDate(dateStr){
+  const idx=dayIndex(dateStr);
+  const n=DATA_BLOGGERS.length;
+  return DATA_BLOGGERS[((idx%n)+n)%n];
+}
+function renderBlogger(c){
+  const b=bloggerForDate(bloggerBrowseDate);
+  const isToday=bloggerBrowseDate===todayStr();
+  const pfClass=b.pf==="dy"?"pf-dy":"pf-xhs";
+  const pfName=b.pf==="dy"?"抖音":"小红书";
+  const link=b.pf==="dy"
+    ? "https://www.douyin.com/search/"+encodeURIComponent(b.name)
+    : "https://www.xiaohongshu.com/search_result?keyword="+encodeURIComponent(b.name);
+  const noteKey=bloggerBrowseDate;
+  const note=(state.data.blogger.notes&&state.data.blogger.notes[noteKey])||"";
+  let h=`<div class="bc-daynav">
+    <button onclick="shiftBlogger(-1)">‹</button>
+    <div class="cur">${isToday?"📌 今日推荐 · "+bloggerBrowseDate:"📅 "+bloggerBrowseDate}</div>
+    <button onclick="shiftBlogger(1)">›</button>
+  </div>`;
+  h+=`<div class="card blogger-card">
+    <div class="bc-top">
+      <div class="bc-avatar">${b.pf==="dy"?"🎬":"📕"}</div>
+      <div>
+        <div class="bc-name">${esc(b.name)}<span class="pf-badge ${pfClass}">${pfName}</span></div>
+        <div class="bc-platform">今日为你挑选的优质探店博主</div>
+      </div>
+    </div>
+    <div class="bc-video">🎥 代表作：<b>${esc(b.video)}</b></div>
+    <div class="bc-reason"><b>为什么这条流量好？</b><br>${esc(b.reason)}</div>
+    <div class="bc-foot">
+      <button class="btn btn-primary bc-go" onclick="goBlogger('${esc(link)}')">🔗 去看看这条/博主（自动跳转）</button>
+    </div>
+    <textarea class="bc-note" id="bloggerNote" placeholder="我的灵感笔记：这条我能借鉴什么？（自动保存）">${esc(note)}</textarea>
+  </div>`;
+  h+=`<div class="card"><div class="hint" style="margin:0">
+    💡 这是按日期自动轮换的<b>起步样例库</b>（共 ${DATA_BLOGGERS.length} 位，覆盖抖音/小红书探店）。想换成你真正想学的博主，告诉我名字我来加；或在 <code>DATA_BLOGGERS</code> 里扩展。每天 0 点自动切换今日推荐。
+  </div></div>`;
+  c.innerHTML=h;
+  const ta=$("bloggerNote");
+  ta.addEventListener("input",()=>{
+    if(!state.data.blogger.notes) state.data.blogger.notes={};
+    state.data.blogger.notes[noteKey]=ta.value; saveState({silent:true}); scheduleSync();
+  });
+}
+function shiftBlogger(dir){
+  const d=new Date(bloggerBrowseDate+"T00:00:00");
+  d.setDate(d.getDate()+dir);
+  bloggerBrowseDate=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  renderBlogger($("content"));
+}
+function goBlogger(url){ window.open(url,"_blank"); }
+
+/* =========================================================
+   模块管理
+   ========================================================= */
+function openModules(){
+  const box=$("modList"); box.innerHTML="";
+  state.pages.forEach(p=>{
+    const row=document.createElement("div");
+    row.className="mod-toggle";
+    const on=p.visible?"on":"";
+    let right = p.builtin
+      ? `<div class="switch ${on}" onclick="toggleMod('${p.id}',this)"><i></i></div>`
+      : `<div style="display:flex;gap:8px;align-items:center"><div class="switch ${on}" onclick="toggleMod('${p.id}',this)"><i></i></div><span class="mod-del" onclick="delModule('${p.id}')">删除</span></div>`;
+    row.innerHTML=`<div class="mt-name"><span>${p.icon}</span><span>${esc(p.label)}</span></div>${right}`;
+    box.appendChild(row);
+  });
+  openModal("modMask");
+}
+function toggleMod(id,el){
+  const p=state.pages.find(x=>x.id===id); if(!p)return;
+  p.visible=!p.visible; el.classList.toggle("on");
+  saveState(); renderNav();
+}
+function addModule(){
+  const inp=$("newModName"); const name=inp.value.trim(); if(!name)return;
+  const id="c_"+uid();
+  const type="list"; // 自定义默认清单；如需笔记可后续扩展
+  state.pages.push({id,label:name,icon:"📌",type,builtin:false,visible:true});
+  if(!state.data[id]) state.data[id]=[];
+  inp.value=""; saveState(); openModules(); renderNav();
+}
+function delModule(id){
+  if(!confirm("确定删除该自定义模块？其数据也会清除。"))return;
+  state.pages=state.pages.filter(x=>x.id!==id);
+  delete state.data[id];
+  saveState(); openModules(); renderNav();
+}
+
+/* =========================================================
+   备份 / 恢复
+   ========================================================= */
+function openBackup(){ openModal("backupMask"); }
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="饼饼工作台备份_"+todayStr()+".json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importData(e){
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(d&&d.pages){ state=d; saveState(); renderNav(); switchPage(currentPage); alert("导入成功！"); }
+      else alert("文件格式不正确");
+    }catch(err){ alert("解析失败："+err.message); }
+  };
+  r.readAsText(f);
+  e.target.value="";
+}
+function wipeData(){
+  if(!confirm("⚠️ 将清空本机全部数据，且无法恢复（云端不受影响）。确定？"))return;
+  localStorage.removeItem(LS_KEY);
+  state=defaultState(); saveState(); renderNav(); switchPage("plan");
+  alert("已清空本机数据");
+}
+
+function disableBuiltinSync(){
+  if(!confirm("断开后本机将不再自动同步到云端（本地数据保留）。确定断开？"))return;
+  try{ localStorage.setItem(LS_SYNC_OFF,"1"); }catch(e){}
+  syncCfg={enabled:false,mode:"github",repo:"",token:"",branch:"main",path:"",jsonUrl:"",docId:"1"};
+  saveSyncCfg();
+  setSyncStatus("off");
+  closeModal("syncMask");
+  alert("已断开自动同步。重新启用：在弹窗填写仓库与 Token 保存即可。");
+}
+function restoreBuiltinSync(){
+  if(!confirm("将恢复为阿布帮你配好的自动同步（仓库 bingbing99827/bingbing-workbench），确定？"))return;
+  try{ localStorage.removeItem(LS_SYNC_OFF); }catch(e){}
+  syncCfg = Object.assign({}, BUILTIN_SYNC);
+  saveSyncCfg();
+  closeModal("syncMask");
+  setSyncStatus("syncing");
+  doSync();
+  setTimeout(()=>alert("✅ 已恢复内置自动同步，顶栏应变为 🟢 已连接。"),100);
+}
+
+/* =========================================================
+   云端同步弹窗
+   ========================================================= */
+function openSyncModal(){
+  $("ghRepo").value=syncCfg.repo||"";
+  $("ghBranch").value=syncCfg.branch||"main";
+  const isBuiltin = syncCfg.token && syncCfg.token===BUILTIN_SYNC.token;
+  $("ghToken").value = isBuiltin ? "" : (syncCfg.token||"");
+  $("ghToken").placeholder = isBuiltin ? "已内置，留空即沿用" : "ghp_...";
+  $("ghTokenHint").style.display = isBuiltin ? "block" : "none";
+  $("jsonUrl").value=syncCfg.jsonUrl||"";
+  $("docId").value=syncCfg.docId||"1";
+  $("syncMode").value=syncCfg.mode||"github";
+  onSyncModeChange();
+  const needRestore = syncCfg.mode==="github" && (!syncCfg.token || syncCfg.repo!==BUILTIN_SYNC.repo);
+  if(needRestore){
+    $("syncTestResult").innerHTML='<div class="status-bad">⚠️ 内置自动同步凭据缺失或被改动</div><button class="btn btn-primary" style="margin-top:8px" onclick="restoreBuiltinSync()">恢复内置自动同步</button>';
+  }else{
+    $("syncTestResult").innerHTML="";
+  }
+  openModal("syncMask");
+}
+function onSyncModeChange(){
+  const m=$("syncMode").value;
+  $("githubFields").style.display = m==="github"?"block":"none";
+  $("jsonFields").style.display = m==="json"?"block":"none";
+}
+async function testSync(){
+  const r=$("syncTestResult");
+  syncCfg.mode=$("syncMode").value;
+  syncCfg.docId=$("docId").value.trim()||"1";
+  if(syncCfg.mode==="github"){
+    syncCfg.repo=$("ghRepo").value.trim();
+    syncCfg.token=$("ghToken").value.trim() || (syncCfg.token===BUILTIN_SYNC.token?BUILTIN_SYNC.token:"");
+    syncCfg.branch=$("ghBranch").value.trim()||"main";
+  }else{
+    syncCfg.jsonUrl=$("jsonUrl").value.trim();
+  }
+  if(syncCfg.mode==="github"){
+    if(!syncCfg.repo){ r.innerHTML='<span class="status-bad">请填写仓库（owner/repo）</span>'; return; }
+    if(!syncCfg.token){ r.innerHTML='<span class="status-bad">请填写 Token</span>'; return; }
+  }else{
+    if(!syncCfg.jsonUrl){ r.innerHTML='<span class="status-bad">请填写 API 地址</span>'; return; }
+  }
+  r.innerHTML='<span style="color:var(--warn)">连接中…</span>';
+  try{
+    await pullRemote();
+    r.innerHTML='<span class="status-ok">✅ 连接成功，可以保存</span>';
+  }catch(e){
+    const isNet = (e.message||"").toLowerCase().includes("failed to fetch") || (e.message||"").includes("NetworkError");
+    if(isNet){
+      r.innerHTML='<div class="status-bad">❌ 当前预览/运行环境限制网络请求</div><div class="sync-notice" style="margin-top:8px">这通常是因为文件在受限的 iframe 预览中打开。请将本文件下载到电脑/手机，用浏览器直接打开（Chrome/Edge/Safari），自动同步即可正常工作。</div>';
+    }else{
+      r.innerHTML='<span class="status-bad">❌ 连接失败：'+esc(e.message)+'</span>';
+    }
+  }
+}
+function saveSync(){
+  syncCfg.mode=$("syncMode").value;
+  syncCfg.docId=$("docId").value.trim()||"1";
+  if(syncCfg.mode==="github"){
+    syncCfg.repo=$("ghRepo").value.trim();
+    syncCfg.token=$("ghToken").value.trim() || (syncCfg.token===BUILTIN_SYNC.token?BUILTIN_SYNC.token:"");
+    syncCfg.branch=$("ghBranch").value.trim()||"main"; syncCfg.path="";
+  }else{
+    syncCfg.jsonUrl=$("jsonUrl").value.trim();
+  }
+  saveSyncCfg();
+  if((syncCfg.mode==="github"&&(!syncCfg.repo||!syncCfg.token))||(syncCfg.mode==="json"&&!syncCfg.jsonUrl)){
+    syncCfg.enabled=false; setSyncStatus("off"); closeModal("syncMask"); return;
+  }
+  try{ localStorage.removeItem(LS_SYNC_OFF); }catch(e){}
+  syncCfg.enabled=true;
+  setSyncStatus("syncing");
+  closeModal("syncMask");
+  doSync();
+}
+
+/* =========================================================
+   UI helpers
+   ========================================================= */
+function openModal(id){ $(id).classList.add("show"); }
+function closeModal(id){ $(id).classList.remove("show"); }
+function openSidebar(){ $("sidebar").classList.add("open"); $("overlay").classList.add("show"); }
+function closeSidebar(){ $("sidebar").classList.remove("open"); $("overlay").classList.remove("show"); }
+
+/* =========================================================
+   0 点自动更新 检测
+   ========================================================= */
+let lastDay=todayStr();
+function isDailyPage(id){ const p=state.pages.find(x=>x.id===id); return p && p.type==="daily"; }
+function checkMidnight(){
+  const now=todayStr();
+  if(now!==lastDay){
+    lastDay=now;
+    bloggerBrowseDate=now;
+    dailyBrowseDate=now;
+    if(currentPage==="blogger"||currentPage==="plan"||currentPage==="week"||isDailyPage(currentPage)){ renderCurrent(); }
+    renderNav();
+  }
+}
+
+/* =========================================================
+   启动
+   ========================================================= */
+function init(){
+  loadState();
+  loadSync();
+  // 恢复上次页面
+  let lp="plan"; try{ lp=localStorage.getItem("bb_lastpage")||"plan"; }catch(e){}
+  if(!state.pages.find(p=>p.id===lp&&p.visible)) lp="plan";
+  currentPage=lp;
+  const p=state.pages.find(x=>x.id===lp);
+  if(p){ $("topTitle").textContent=p.label; $("topSub").textContent=subText(lp); }
+  setSyncStatus(syncCfg.enabled?"syncing":"off");
+  renderNav();
+  renderCurrent();
+  // 若已配置云端，启动拉取+周期同步
+  if(syncCfg.enabled){ doSync(); }
+  setInterval(checkMidnight,30000);
+  setInterval(()=>{ if(syncCfg.enabled) doSync(); }, 5*60*1000); // 每5分钟保活同步
+  // 关闭前再存一次
+  window.addEventListener("beforeunload",()=>{ try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){} });
+}
+init();
+</script>
+</body>
+</html>
