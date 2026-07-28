@@ -71,8 +71,9 @@
   .card-title{font-weight:700;font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
   .card-title .ct-sub{font-size:12px;color:var(--sub);font-weight:500;margin-left:auto}
   .input-row{display:flex;gap:8px;margin-bottom:12px}
-  .plan-date{flex:0 0 auto;width:150px;padding:11px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-size:14px}
-  @media(max-width:520px){ .plan-date{width:130px} }
+  .plan-date-bar{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-size:15px;font-weight:600}
+  .plan-date-bar input[type="date"]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+  .plan-date-bar .pdd-sub{font-size:12px;color:var(--sub);font-weight:500;margin-left:6px}
   .input-row input,.input-row textarea{
     flex:1;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14.5px;font-family:inherit;
     background:#FAFBFC;color:var(--text);outline:none;transition:.15s;resize:vertical;
@@ -961,12 +962,14 @@ function renderPlan(c){
       <div class="prog-ring" style="--p:${pct}"><i>${pct}%</i></div>
       <div class="prog-meta"><b>${done.length}/${total}</b> <span>已完成 · 坚持打卡!</span></div>
     </div>
-    <div class="input-row" style="margin-top:14px">
-      <input id="planInput" placeholder="添加一条计划，回车确认…" onkeydown="if(event.key==='Enter')addPlan()">
-      <input type="date" id="planDate" value="${todayStr()}" class="plan-date" title="选择日期（默认今天）">
+    <div class="plan-date-bar" onclick="">
+      <input type="date" id="planDate" value="${todayStr()}" onchange="updatePlanDateLabel(this)">
+      <span id="planDateLabel">📅 今天</span>
+    </div>
+    <div class="input-row">
+      <input id="planInput" placeholder="添加一条计划，回车或点按钮确认…" onkeydown="if(event.key==='Enter')addPlan()">
       <button class="btn btn-primary" onclick="addPlan()">添加</button>
     </div>
-    <div class="hint" style="margin:8px 0 0">默认填「今天」；点日期框可改成明天或其他日子，提前把日程安排好。</div>
   </div>`;
   if(!dates.length){
     h+=`<div class="card"><div class="empty">还没有计划，添加第一条吧～</div></div>`;
@@ -981,6 +984,7 @@ function renderPlan(c){
   }
   c.innerHTML=h;
   bindPlan(c);
+  const pd=$("planDate"); if(pd) updatePlanDateLabel(pd);
 }
 function planItem(t,doneMode){
   const done=t.done?"done":"";
@@ -994,6 +998,14 @@ function planItem(t,doneMode){
 }
 function bindPlan(c){
   // 平台快捷标记可在编辑时加，这里仅绑定已有
+}
+function updatePlanDateLabel(el){
+  const label=$("planDateLabel"); if(!label||!el)return;
+  const d=el.value;
+  const base=dateLabel(d).replace("📅 ","");
+  const m=new Date(d+"T00:00:00").getMonth()+1;
+  const day=new Date(d+"T00:00:00").getDate();
+  label.innerHTML=`📅 ${base}<span class="pdd-sub">${m}月${day}日</span>`;
 }
 function addPlan(){
   const inp=$("planInput"); if(!inp)return;
