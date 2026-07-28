@@ -71,6 +71,8 @@
   .card-title{font-weight:700;font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
   .card-title .ct-sub{font-size:12px;color:var(--sub);font-weight:500;margin-left:auto}
   .input-row{display:flex;gap:8px;margin-bottom:12px}
+  .plan-date{flex:0 0 auto;width:150px;padding:11px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-size:14px}
+  @media(max-width:520px){ .plan-date{width:130px} }
   .input-row input,.input-row textarea{
     flex:1;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14.5px;font-family:inherit;
     background:#FAFBFC;color:var(--text);outline:none;transition:.15s;resize:vertical;
@@ -589,6 +591,17 @@ let syncStatus = "off"; // off | on | syncing | error
 /* ---------- 工具 ---------- */
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function dateLabel(d){
+  if(d===todayStr()) return "📅 今天";
+  if(d===tomorrowStr()) return "📅 明天";
+  const diff=Math.round((new Date(d+"T00:00:00")-new Date(todayStr()+"T00:00:00"))/86400000);
+  if(diff===1) return "📅 明天";
+  if(diff===-1) return "📅 昨天";
+  if(diff>1) return "📅 "+d+"（"+diff+"天后）";
+  if(diff<-1) return "📅 "+d+"（"+Math.abs(diff)+"天前）";
+  return "📅 "+d;
+}
 function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function $(id){return document.getElementById(id)}
 
@@ -936,46 +949,34 @@ function renderCurrent(){
    ========================================================= */
 function renderPlan(c){
   const tasks=state.data.plan||[];
-  const todo=tasks.filter(t=>!t.done);
   const done=tasks.filter(t=>t.done);
   const total=tasks.length, pct= total? Math.round(done.length/total*100):0;
+  // 按日期分组（可提前填某天）
+  const groups={};
+  tasks.forEach(t=>{ const d=t.date||t.doneDate||todayStr(); (groups[d]=groups[d]||[]).push(t); });
+  const dates=Object.keys(groups).sort();
   let h=`<div class="card">
-    <div class="card-title">📅 今日计划 <span class="ct-sub">自动保存 · 关闭不丢</span></div>
+    <div class="card-title">📅 每日计划 <span class="ct-sub">可提前填某天 · 自动保存</span></div>
     <div class="prog-wrap">
       <div class="prog-ring" style="--p:${pct}"><i>${pct}%</i></div>
       <div class="prog-meta"><b>${done.length}/${total}</b> <span>已完成 · 坚持打卡!</span></div>
     </div>
     <div class="input-row" style="margin-top:14px">
       <input id="planInput" placeholder="添加一条计划，回车确认…" onkeydown="if(event.key==='Enter')addPlan()">
+      <input type="date" id="planDate" value="${todayStr()}" class="plan-date" title="选择日期（默认今天）">
       <button class="btn btn-primary" onclick="addPlan()">添加</button>
     </div>
-    <div id="planTodo"></div>
+    <div class="hint" style="margin:8px 0 0">默认填「今天」；点日期框可改成明天或其他日子，提前把日程安排好。</div>
   </div>`;
-  // 待办
-  if(todo.length){
-    h+=`<div class="sec-label">📌 今日待办（${todo.length}）</div><div class="card" style="padding:6px 14px">`;
-    todo.forEach(t=>{ h+=planItem(t); });
-    h+=`</div>`;
+  if(!dates.length){
+    h+=`<div class="card"><div class="empty">还没有计划，添加第一条吧～</div></div>`;
   }else{
-    h+=`<div class="card"><div class="empty">🎉 今日待办已清空，去探店吧！</div></div>`;
-  }
-  // 历史完成（按日期分组折叠）
-  if(done.length){
-    const byDate={};
-    done.forEach(t=>{ const d=t.doneDate||"未知日期"; (byDate[d]=byDate[d]||[]).push(t); });
-    const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-    h+=`<div class="sec-label">🗂️ 历史完成（点击展开）</div>`;
-    dates.forEach((d,i)=>{
-      const open=i===0?"open":"";
-      h+=`<div class="hist-day">
-        <div class="hist-head ${open}" onclick="toggleHist(this)">
-          <span class="hd-date">${esc(d)}</span>
-          <span class="hd-count">${byDate[d].length} 项</span>
-          <span class="hd-arrow">▼</span>
-        </div>
-        <div class="hist-body ${open}" style="padding:0 15px 8px">`;
-      byDate[d].forEach(t=>{ h+=planItem(t,true); });
-      h+=`</div></div>`;
+    dates.forEach(d=>{
+      const arr=groups[d];
+      const ddone=arr.filter(t=>t.done).length;
+      h+=`<div class="sec-label">${dateLabel(d)} <span style="color:var(--sub);font-weight:400;margin-left:6px">${ddone}/${arr.length} 完成</span></div><div class="card" style="padding:6px 14px">`;
+      arr.forEach(t=>{ h+=planItem(t); });
+      h+=`</div>`;
     });
   }
   c.innerHTML=h;
@@ -997,7 +998,8 @@ function bindPlan(c){
 function addPlan(){
   const inp=$("planInput"); if(!inp)return;
   const v=inp.value.trim(); if(!v)return;
-  state.data.plan.push({id:uid(),text:v,platform:"",done:false,doneDate:null,createdDate:todayStr()});
+  const dt=$("planDate"); const date=(dt&&dt.value)||todayStr();
+  state.data.plan.push({id:uid(),text:v,platform:"",done:false,doneDate:null,date:date,createdDate:todayStr()});
   inp.value=""; saveState(); renderPlan($("content")); renderNav();
 }
 function togglePlan(id){
@@ -1240,7 +1242,7 @@ function renderWeek(c){
     const isToday=dayDate===todayStr();
     h+=`<div class="week-day ${isToday?"today":""}">
       <div class="wd-head"><span class="wd-dayname">${name}</span><span style="font-size:12px;color:var(--sub)">${dayDone}/${dayTasks.length}</span></div>
-      <div class="input-row"><input id="weekInp_${i}" placeholder="添加任务…" onkeydown="if(event.key==='Enter')addWeekTask(${i})"></div>
+      <div class="input-row"><input id="weekInp_${i}" placeholder="添加任务…" onkeydown="if(event.key==='Enter')addWeekTask(${i})"><button class="btn btn-primary btn-sm" onclick="addWeekTask(${i})">添加</button></div>
       <div style="flex:1">`;
     dayTasks.forEach(t=>{
       const done=t.done?"done":""; const chk=t.done?"✓":"";
